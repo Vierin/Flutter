@@ -23,6 +23,20 @@ class AuthService extends ChangeNotifier {
   /// Токен для запросов к API (Bearer).
   String? get accessToken => _supabase.auth.currentSession?.accessToken;
 
+  /// Обновить сессию (продлить токен). Вызывать перед важными запросами.
+  Future<void> refreshSession() async {
+    try {
+      final res = await _supabase.auth.refreshSession();
+      if (res.session != null) {
+        await _fetchUser(res.session!.accessToken);
+        notifyListeners();
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('[Auth] refreshSession error: $e');
+      rethrow;
+    }
+  }
+
   AuthService() {
     _init();
   }

@@ -311,6 +311,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       staffMembers: _staffMembers,
       accessToken: token,
       onSaved: _loadData,
+      getAccessToken: () async {
+        await context.read<AuthService>().refreshSession();
+        return context.read<AuthService>().accessToken;
+      },
     );
   }
 
@@ -764,51 +768,54 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               ),
                             ),
                           if (booking != null && timeBlock == null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                              child: InkWell(
-                                onTap: () => BookingDetailModal.show(
-                                  context,
-                                  booking: booking,
-                                  onConfirm: _handleConfirmBooking,
-                                  onReject: _handleRejectBooking,
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: booking.status == BookingStatus.pending
-                                        ? AppColors.warning100
-                                        : AppColors.success100,
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: AppColors.borderPrimary),
+                            Positioned.fill(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                                child: InkWell(
+                                  onTap: () => BookingDetailModal.show(
+                                    context,
+                                    booking: booking,
+                                    onConfirm: _handleConfirmBooking,
+                                    onReject: _handleRejectBooking,
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        booking.user?.name ?? booking.user?.email ?? '—',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.textPrimary,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      if (booking.service != null)
+                                  borderRadius: BorderRadius.circular(6),
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: booking.status == BookingStatus.pending
+                                          ? AppColors.warning100
+                                          : AppColors.success100,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: AppColors.borderPrimary),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
                                         Text(
-                                          booking.service!.name,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: AppColors.textSecondary,
+                                          booking.user?.name ?? booking.user?.email ?? '—',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
-                                    ],
+                                        if (booking.service != null)
+                                          Text(
+                                            booking.service!.name,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

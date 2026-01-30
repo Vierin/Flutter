@@ -5,6 +5,7 @@ import '../../constants/colors.dart';
 import '../../models/salon.dart';
 import '../../services/auth_service.dart';
 import '../../services/dashboard_api_service.dart';
+import '../../widgets/address_picker_modal.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -34,6 +35,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Salon? _salon;
   bool _salonLoading = true;
   bool _salonSaving = false;
+  double? _salonLat;
+  double? _salonLon;
 
   @override
   void initState() {
@@ -82,6 +85,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _salonEmailController.text = s.email ?? '';
     _salonWebsiteController.text = s.website ?? '';
     _salonInstagramController.text = s.instagram ?? '';
+    _salonLat = s.latitude;
+    _salonLon = s.longitude;
   }
 
   @override
@@ -133,6 +138,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'website': _salonWebsiteController.text.trim(),
         'instagram': _salonInstagramController.text.trim(),
       };
+      if (_salonLat != null && _salonLon != null) {
+        payload['latitude'] = _salonLat;
+        payload['longitude'] = _salonLon;
+      }
       Salon result;
       if (hadSalon) {
         if (_salon!.workingHours != null) payload['workingHours'] = _salon!.workingHours;
@@ -226,6 +235,108 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SnackBar(content: Text(result.error ?? 'Не удалось удалить аккаунт')),
       );
     }
+  }
+
+  static const _salonLinkBase = 'https://henzo.app/salon/';
+
+  InputDecoration _inputDecoration({required String hint, bool alignLabelWithHint = false}) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: AppColors.backgroundPrimary,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: AppColors.borderPrimary),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      alignLabelWithHint: alignLabelWithHint,
+    );
+  }
+
+  Widget _labeledField({required String label, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        child,
+      ],
+    );
+  }
+
+  Widget _salonLinkRow(BuildContext context) {
+    final slug = _salon?.slug ?? '';
+    final link = slug.isEmpty ? '' : '$_salonLinkBase$slug';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundTertiary,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderPrimary),
+      ),
+      child: Text(
+        link.isEmpty ? '—' : link,
+        style: TextStyle(fontSize: 14, color: link.isEmpty ? AppColors.textSecondary : AppColors.textPrimary),
+      ),
+    );
+  }
+
+  Widget _salonLinkButtons(BuildContext context) {
+    final slug = _salon?.slug ?? '';
+    final link = slug.isEmpty ? '' : '$_salonLinkBase$slug';
+    final style = OutlinedButton.styleFrom(
+      foregroundColor: AppColors.textPrimary,
+      backgroundColor: AppColors.neutral200,
+      side: const BorderSide(color: AppColors.borderPrimary),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    );
+    return Row(
+      children: [
+        OutlinedButton.icon(
+          onPressed: link.isEmpty
+              ? null
+              : () {
+                  Clipboard.setData(ClipboardData(text: link));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Ссылка скопирована')),
+                  );
+                },
+          style: style,
+          icon: const Icon(Icons.copy, size: 18),
+          label: const Text('Копировать'),
+        ),
+        const SizedBox(width: 12),
+        OutlinedButton.icon(
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Поделиться — скоро')),
+            );
+          },
+          style: style,
+          icon: const Icon(Icons.share_outlined, size: 18),
+          label: const Text('Поделиться'),
+        ),
+        const SizedBox(width: 12),
+        OutlinedButton.icon(
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('QR-код — скоро')),
+            );
+          },
+          style: style,
+          icon: const Icon(Icons.qr_code_outlined, size: 18),
+          label: const Text('QR-код'),
+        ),
+      ],
+    );
   }
 
   void _showDeleteAccountDialog() {
@@ -341,10 +452,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       const SizedBox(height: 16),
                                       _labeledField(
                                         label: 'Адрес',
-                                        child: TextFormField(
-                                          controller: _salonAddressController,
-                                          decoration: _inputDecoration(hint: 'Введите адрес').copyWith(
-                                            suffixIcon: Icon(Icons.location_on_outlined, size: 20, color: AppColors.textSecondary),
+                                        child: InkWell(
+                                          onTap: () async {
+                                            await AddressPickerModal.show(
+                                              context,
+                                              initialAddress: _salonAddressController.text,
+                                              initialLat: _salonLat,
+                                              initialLon: _salonLon,
+                                              onSelect: (address, lat, lon) {
+                                                setState(() {
+                                                  _salonAddressController.text = address;
+                                                  _salonLat = lat;
+                                                  _salonLon = lon;
+                                                });
+                                              },
+                                            );
+                                          },
+                                          borderRadius: BorderRadius.circular(10),
+                                          child: InputDecorator(
+                                            decoration: _inputDecoration(hint: 'Введите адрес').copyWith(
+                                              suffixIcon: Icon(Icons.location_on_outlined, size: 20, color: AppColors.textSecondary),
+                                            ),
+                                            child: Text(
+                                              _salonAddressController.text.isEmpty
+                                                  ? ''
+                                                  : _salonAddressController.text,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color: _salonAddressController.text.isEmpty
+                                                    ? AppColors.textSecondary
+                                                    : AppColors.textPrimary,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -421,6 +560,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ],
                             ),
                           ),
+                                ],
+                              ),
+                            ),
                     const SizedBox(height: 24),
 
                 // Настройки аккаунта
@@ -608,6 +750,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ],
             ),
+          ),
+        ),
     );
   }
 }
@@ -625,9 +769,19 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: AppColors.borderPrimary)),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundPrimary,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderPrimary),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -637,7 +791,7 @@ class _SectionCard extends StatelessWidget {
               title,
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: titleColor ?? AppColors.textPrimary,
               ),
             ),

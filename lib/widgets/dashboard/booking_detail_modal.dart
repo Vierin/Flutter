@@ -66,9 +66,10 @@ class _BookingDetailContent extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Header
+            // Header — на всю ширину
             Container(
-              padding: const EdgeInsets.all(20),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               decoration: const BoxDecoration(
                 border: Border(
                   bottom: BorderSide(color: AppColors.borderPrimary),
@@ -108,11 +109,11 @@ class _BookingDetailContent extends StatelessWidget {
                 ],
               ),
             ),
-            // Content
+            // Content — на всю ширину, минимальные боковые отступы
             Expanded(
               child: SingleChildScrollView(
                 controller: scrollController,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -124,8 +125,10 @@ class _BookingDetailContent extends StatelessWidget {
                       'Client',
                       booking.user?.name ?? 'Unknown Client',
                       [
-                        if (booking.user?.email != null) booking.user!.email!,
-                        if (booking.user?.phone != null) booking.user!.phone!,
+                        if (booking.user?.email != null && booking.user!.email!.isNotEmpty)
+                          booking.user!.email!,
+                        if (booking.user?.phone != null && booking.user!.phone!.isNotEmpty)
+                          booking.user!.phone!,
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -136,7 +139,7 @@ class _BookingDetailContent extends StatelessWidget {
                       [
                         if (booking.service?.duration != null)
                           'Duration: ${booking.service!.duration} minutes',
-                        if (booking.service?.price != null)
+                        if (booking.service?.price != null && booking.service!.price != null)
                           'Price: ${_formatPrice(booking.service!.price!)}',
                       ],
                     ),
@@ -157,7 +160,7 @@ class _BookingDetailContent extends StatelessWidget {
                       ),
                     if (booking.staff != null) const SizedBox(height: 20),
                     // Notes
-                    if (booking.notes != null)
+                    if (booking.notes != null && booking.notes!.isNotEmpty)
                       _buildSection(
                         'Notes',
                         booking.notes!,
@@ -167,9 +170,10 @@ class _BookingDetailContent extends StatelessWidget {
                 ),
               ),
             ),
-            // Action Buttons
+            // Action Buttons — на всю ширину
             Container(
-              padding: const EdgeInsets.all(20),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               decoration: const BoxDecoration(
                 border: Border(
                   top: BorderSide(color: AppColors.borderPrimary),

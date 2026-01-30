@@ -13,6 +13,7 @@ class NewBookingModal extends StatefulWidget {
     required this.staffMembers,
     required this.accessToken,
     required this.onSaved,
+    this.getAccessToken,
   });
 
   final String salonId;
@@ -20,6 +21,8 @@ class NewBookingModal extends StatefulWidget {
   final List<StaffMember> staffMembers;
   final String accessToken;
   final VoidCallback onSaved;
+  /// Если задан, перед отправкой вызывается для получения свежего токена (обход истёкшего).
+  final Future<String?> Function()? getAccessToken;
 
   static Future<void> show(
     BuildContext context, {
@@ -28,6 +31,7 @@ class NewBookingModal extends StatefulWidget {
     required List<StaffMember> staffMembers,
     required String accessToken,
     required VoidCallback onSaved,
+    Future<String?> Function()? getAccessToken,
   }) {
     return Navigator.of(context).push<void>(
       MaterialPageRoute(
@@ -38,6 +42,7 @@ class NewBookingModal extends StatefulWidget {
           staffMembers: staffMembers,
           accessToken: accessToken,
           onSaved: onSaved,
+          getAccessToken: getAccessToken,
         ),
       ),
     );
@@ -82,12 +87,6 @@ class _NewBookingModalState extends State<NewBookingModal> {
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
-  }
-
-  List<ServiceItem> get _filteredServices {
-    final q = _serviceSearchController.text.trim().toLowerCase();
-    if (q.isEmpty) return widget.services;
-    return widget.services.where((s) => s.displayName.toLowerCase().contains(q)).toList();
   }
 
   String _formatPrice(double? price) {
@@ -143,6 +142,20 @@ class _NewBookingModalState extends State<NewBookingModal> {
     final phone = _phoneController.text.trim();
     setState(() => _isSubmitting = true);
     try {
+      final token = widget.getAccessToken != null
+          ? await widget.getAccessToken!()
+          : widget.accessToken;
+      if (token == null || token.isEmpty) {
+        if (!mounted) return;
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          const SnackBar(
+            content: Text('Сессия истекла. Войдите снова'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
       final dateTime = DateTime(
         _selectedDate.year,
         _selectedDate.month,
@@ -151,7 +164,7 @@ class _NewBookingModalState extends State<NewBookingModal> {
         _selectedMinute,
       );
       await DashboardApiService.createBooking(
-        widget.accessToken,
+        token,
         salonId: widget.salonId,
         serviceId: _selectedService!.id,
         timeIso: dateTime.toUtc().toIso8601String(),
@@ -239,6 +252,7 @@ class _NewBookingModalState extends State<NewBookingModal> {
       children: [
         InkWell(
           onTap: () {
+            _serviceSearchController.clear();
             showModalBottomSheet<void>(
               context: context,
               builder: (ctx) => SafeArea(
@@ -249,18 +263,43 @@ class _NewBookingModalState extends State<NewBookingModal> {
                       padding: const EdgeInsets.all(16),
                       child: Text('Выберите услугу', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _serviceSearchController,
+                        decoration: InputDecoration(
+                          hintText: 'Поиск по названию услуги',
+                          prefixIcon: const Icon(Icons.search, size: 22, color: AppColors.textSecondary),
+                          filled: true,
+                          fillColor: AppColors.backgroundSecondary,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Flexible(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: widget.services.length,
-                        itemBuilder: (ctx, i) {
-                          final s = widget.services[i];
-                          return ListTile(
-                            title: Text(s.displayName),
-                            subtitle: Text('${s.duration ?? 0} мин · ${_formatPrice(s.price)}'),
-                            onTap: () {
-                              setState(() => _selectedService = s);
-                              Navigator.pop(ctx);
+                      child: ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _serviceSearchController,
+                        builder: (_, value, __) {
+                          final list = value.text.trim().isEmpty
+                              ? widget.services
+                              : widget.services
+                                  .where((s) => s.displayName.toLowerCase().contains(value.text.trim().toLowerCase()))
+                                  .toList();
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: list.length,
+                            itemBuilder: (ctx, i) {
+                              final s = list[i];
+                              return ListTile(
+                                title: Text(s.displayName),
+                                subtitle: Text('${s.duration ?? 0} мин · ${_formatPrice(s.price)}'),
+                                onTap: () {
+                                  setState(() => _selectedService = s);
+                                  Navigator.pop(ctx);
+                                },
+                              );
                             },
                           );
                         },

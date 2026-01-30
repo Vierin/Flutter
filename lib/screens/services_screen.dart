@@ -19,7 +19,7 @@ class ServicesScreen extends StatefulWidget {
 class _ServicesScreenState extends State<ServicesScreen> {
   Salon? _salon;
   List<ServiceItem> _services = [];
-  bool _isLoading = false;
+  bool _isLoading = true;
   bool _isActionLoading = false;
   ServicesSort _sort = ServicesSort.nameAz;
 
@@ -31,7 +31,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
     _searchController.addListener(() => setState(() => _searchQuery = _searchController.text.trim()));
   }
 
@@ -46,7 +46,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
     setState(() => _isLoading = true);
     final token = context.read<AuthService>().accessToken;
     if (token == null || token.isEmpty) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _salon = null;
+          _services = [];
+          _isLoading = false;
+        });
+      }
       return;
     }
     try {
@@ -59,11 +65,21 @@ class _ServicesScreenState extends State<ServicesScreen> {
           _salon = salon;
           _services = services;
           _isLoading = false;
+          if (_selectedCategory != null && !_services.any((s) => s.categoryName == _selectedCategory)) {
+            _selectedCategory = null;
+          }
+          if (_selectedGroup != null && !_services.any((s) => s.groupName == _selectedGroup)) {
+            _selectedGroup = null;
+          }
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _salon = null;
+          _services = [];
+          _isLoading = false;
+        });
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
         );
@@ -90,7 +106,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
   List<String> get _uniqueCategories {
     final set = <String>{};
     for (final s in _services) {
-      if (s.categoryName != null && s.categoryName!.isNotEmpty) set.add(s.categoryName!);
+      final c = s.categoryName;
+      if (c != null && c.isNotEmpty) set.add(c);
     }
     return set.toList()..sort();
   }
@@ -98,7 +115,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
   List<String> get _uniqueGroups {
     final set = <String>{};
     for (final s in _services) {
-      if (s.groupName != null && s.groupName!.isNotEmpty) set.add(s.groupName!);
+      final g = s.groupName;
+      if (g != null && g.isNotEmpty) set.add(g);
     }
     return set.toList()..sort();
   }
@@ -358,7 +376,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final nameController = TextEditingController(text: item.name);
     final descriptionController = TextEditingController(text: item.description ?? '');
     final priceController = TextEditingController(
-      text: item.price != null ? item.price!.toStringAsFixed(0) : '0',
+      text: item.price != null ? (item.price!.toStringAsFixed(0)) : '0',
     );
     final durationController = TextEditingController(text: (item.duration ?? 30).toString());
     showDialog(
@@ -450,7 +468,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      if (item.categoryName != null && item.categoryName!.isNotEmpty)
+                      if (item.categoryName != null && item.categoryName!.trim().isNotEmpty)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
@@ -462,7 +480,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  item.categoryName!,
+                                  item.categoryName ?? '',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: AppColors.textPrimary,
@@ -741,13 +759,28 @@ class _ServicesScreenState extends State<ServicesScreen> {
       backgroundColor: AppColors.backgroundSecondary,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary500))
-          : _salon == null
+              : _salon == null
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'Сначала настройте салон',
-                      style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.store_outlined, size: 48, color: AppColors.textTertiary),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Сначала настройте салон',
+                          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: _isLoading ? null : _loadData,
+                          icon: const Icon(Icons.refresh, size: 20),
+                          label: const Text('Повторить'),
+                          style: FilledButton.styleFrom(backgroundColor: AppColors.primary500),
+                        ),
+                      ],
                     ),
                   ),
                 )
@@ -849,7 +882,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                   ),
                                   const SizedBox(height: 6),
                                   DropdownButtonFormField<String>(
-                                    value: _selectedCategory,
+                                    value: _selectedCategory != null && _uniqueCategories.contains(_selectedCategory)
+                                        ? _selectedCategory
+                                        : null,
                                     decoration: InputDecoration(
                                       filled: true,
                                       fillColor: AppColors.backgroundPrimary,
@@ -880,7 +915,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                   ),
                                   const SizedBox(height: 6),
                                   DropdownButtonFormField<String>(
-                                    value: _selectedGroup,
+                                    value: _selectedGroup != null && _uniqueGroups.contains(_selectedGroup)
+                                        ? _selectedGroup
+                                        : null,
                                     decoration: InputDecoration(
                                       filled: true,
                                       fillColor: AppColors.backgroundPrimary,

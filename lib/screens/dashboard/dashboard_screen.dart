@@ -184,6 +184,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       staffMembers: staffMembers,
       accessToken: token,
       onSaved: _loadData,
+      getAccessToken: () async {
+        await context.read<AuthService>().refreshSession();
+        return context.read<AuthService>().accessToken;
+      },
     );
   }
 
