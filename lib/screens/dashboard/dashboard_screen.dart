@@ -9,7 +9,12 @@ import '../../widgets/dashboard/stats_card.dart';
 import '../../widgets/dashboard/period_selector.dart';
 import '../../widgets/dashboard/pending_bookings_section.dart';
 import '../../widgets/dashboard/upcoming_bookings_list.dart';
+import '../../models/service_item.dart';
+import '../../models/staff_member.dart';
+import '../../services/services_api_service.dart';
+import '../../services/staff_api_service.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
+import '../../widgets/dashboard/new_booking_modal.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,19 +32,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     final auth = context.read<AuthService>();
     final token = auth.accessToken;
     if (token == null || token.isEmpty) {
-      setState(() {
-        _salon = null;
-        _bookings = [];
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _salon = null;
+          _bookings = [];
+          _isLoading = false;
+        });
+      }
       return;
     }
     try {
@@ -52,19 +60,131 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _salon = null;
           _bookings = [];
           _isLoading = false;
         });
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text('Не удалось загрузить данные: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
 
   Future<void> _handleRefresh() async {
     await _loadData();
+  }
+
+  Future<void> _handleConfirmBooking(String bookingId) async {
+    final token = context.read<AuthService>().accessToken;
+    if (token == null || token.isEmpty) return;
+    try {
+      final ok = await DashboardApiService.confirmBooking(token, bookingId);
+      if (!mounted) return;
+      if (ok) {
+        await _loadData();
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          const SnackBar(
+            content: Text('Бронирование подтверждено'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          const SnackBar(
+            content: Text('Не удалось подтвердить бронирование'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(message.length > 80 ? 'Ошибка подтверждения' : message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleRejectBooking(String bookingId) async {
+    final token = context.read<AuthService>().accessToken;
+    if (token == null || token.isEmpty) return;
+    try {
+      final ok = await DashboardApiService.rejectBooking(token, bookingId);
+      if (!mounted) return;
+      if (ok) {
+        await _loadData();
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          const SnackBar(
+            content: Text('Бронирование отклонено'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          const SnackBar(
+            content: Text('Не удалось отклонить бронирование'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(message.length > 80 ? 'Ошибка отклонения' : message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _openNewBookingModal() async {
+    final token = context.read<AuthService>().accessToken;
+    if (token == null || _salon == null) return;
+    List<ServiceItem> services = [];
+    List<StaffMember> staffMembers = [];
+    try {
+      services = await ServicesApiService.getBySalon(token, _salon!.id);
+      staffMembers = await StaffApiService.getBySalon(token, _salon!.id);
+    } catch (_) {}
+    if (!mounted) return;
+    if (services.isEmpty) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(
+          content: Text('Добавьте услуги в салон'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    if (staffMembers.isEmpty) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(
+          content: Text('Добавьте сотрудников'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    await NewBookingModal.show(
+      context,
+      salonId: _salon!.id,
+      services: services,
+      staffMembers: staffMembers,
+      accessToken: token,
+      onSaved: _loadData,
+    );
   }
 
   String _formatVND(double amount) {
@@ -181,17 +301,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.logout),
-                            onPressed: () async {
-                              await context.read<AuthService>().logout();
-                            },
-                            tooltip: 'Выйти',
-                          ),
                           ElevatedButton(
-                        onPressed: () {
-                          // TODO: Open create booking modal
-                        },
+                        onPressed: _salon == null ? null : () => _openNewBookingModal(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary500,
                           padding: const EdgeInsets.symmetric(
@@ -227,8 +338,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Setup Card or Stats
-                if (_salon == null)
+                // Loader while fetching salon/data, then Setup Card or Stats
+                if (_isLoading)
+                  _buildLoadingCard()
+                else if (_salon == null)
                   _buildSetupCard()
                 else
                   Column(
@@ -323,24 +436,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 // TODO: Handle cancel
                                 print('Cancel booking: $bookingId');
                               },
-                              onConfirm: (bookingId) {
-                                // TODO: Handle confirm
-                                print('Confirm booking: $bookingId');
-                              },
-                              onReject: (bookingId) {
-                                // TODO: Handle reject
-                                print('Reject booking: $bookingId');
-                              },
+                              onConfirm: _handleConfirmBooking,
+                              onReject: _handleRejectBooking,
                             );
                           },
-                          onConfirmBooking: (bookingId) {
-                            // TODO: Handle confirm booking
-                            print('Confirm booking: $bookingId');
-                          },
-                          onRejectBooking: (bookingId) {
-                            // TODO: Handle reject booking
-                            print('Reject booking: $bookingId');
-                          },
+                          onConfirmBooking: _handleConfirmBooking,
+                          onRejectBooking: _handleRejectBooking,
                         ),
                       const SizedBox(height: 24),
                       // Upcoming Bookings
@@ -357,14 +458,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             // TODO: Handle cancel booking
                             print('Cancel booking: $bookingId');
                           },
-                          onConfirmBooking: (bookingId) {
-                            // TODO: Handle confirm booking
-                            print('Confirm booking: $bookingId');
-                          },
-                          onRejectBooking: (bookingId) {
-                            // TODO: Handle reject booking
-                            print('Reject booking: $bookingId');
-                          },
+                          onConfirmBooking: _handleConfirmBooking,
+                          onRejectBooking: _handleRejectBooking,
                           onBookingPress: (booking) {
                             BookingDetailModal.show(
                               context,
@@ -377,14 +472,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 // TODO: Handle cancel
                                 print('Cancel booking: $bookingId');
                               },
-                              onConfirm: (bookingId) {
-                                // TODO: Handle confirm
-                                print('Confirm booking: $bookingId');
-                              },
-                              onReject: (bookingId) {
-                                // TODO: Handle reject
-                                print('Reject booking: $bookingId');
-                              },
+                              onConfirm: _handleConfirmBooking,
+                              onReject: _handleRejectBooking,
                             );
                           },
                         ),
@@ -395,6 +484,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingCard() {
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(vertical: 48),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: AppColors.primary500),
+            const SizedBox(height: 16),
+            Text(
+              'Загрузка данных салона...',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
       ),
     );

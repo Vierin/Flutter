@@ -19,6 +19,26 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    // Собственный debug-ключ для стабильного SHA-1 (Google OAuth).
+    // Создать: см. GOOGLE_OAUTH_ANDROID.md или ключ henzo-debug.keystore в android/app/
+    val henzoDebugKeystore = rootProject.file("app/henzo-debug.keystore")
+    if (henzoDebugKeystore.exists()) {
+        signingConfigs {
+            create("henzoDebug") {
+                storeFile = henzoDebugKeystore
+                storePassword = "henzo-debug"
+                keyAlias = "henzo-debug"
+                keyPassword = "henzo-debug"
+            }
+            getByName("debug") {
+                storeFile = henzoDebugKeystore
+                storePassword = "henzo-debug"
+                keyAlias = "henzo-debug"
+                keyPassword = "henzo-debug"
+            }
+        }
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.mobile"

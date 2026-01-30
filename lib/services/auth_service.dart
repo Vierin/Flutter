@@ -229,4 +229,90 @@ class AuthService extends ChangeNotifier {
     _isAuthenticated = false;
     notifyListeners();
   }
+
+  /// Обновляет профиль (имя, телефон) через PUT /auth/profile.
+  Future<({bool success, String? error})> updateProfile({
+    required String name,
+    required String phone,
+  }) async {
+    final token = accessToken;
+    if (token == null) {
+      return (success: false, error: 'Нет сессии');
+    }
+    try {
+      final url = Uri.parse('${AppConfig.apiUrl}/auth/profile');
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer $token',
+        },
+        body: json.encode({'name': name.trim(), 'phone': phone.trim()}),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final userData = data['user'] as Map<String, dynamic>?;
+        if (userData != null) {
+          _user = UserModel.fromJson(userData);
+          notifyListeners();
+        }
+        return (success: true, error: null);
+      }
+      String msg = 'Ошибка ${response.statusCode}';
+      try {
+        final err = json.decode(response.body) as Map<String, dynamic>?;
+        if (err != null && err['message'] != null) {
+          msg = err['message'] as String;
+        }
+      } catch (_) {}
+      return (success: false, error: msg);
+    } catch (e) {
+      return (success: false, error: e.toString());
+    }
+  }
+
+  /// Меняет пароль через Supabase updateUser.
+  Future<({bool success, String? error})> updatePassword(String newPassword) async {
+    try {
+      final res = await _supabase.auth.updateUser(UserAttributes(password: newPassword));
+      if (res.user != null) return (success: true, error: null);
+      return (success: false, error: 'Не удалось обновить пароль');
+    } on AuthException catch (e) {
+      return (success: false, error: e.message);
+    } catch (e) {
+      return (success: false, error: e.toString());
+    }
+  }
+
+  /// Удаляет аккаунт через DELETE /auth/account, затем выходит.
+  Future<({bool success, String? error})> deleteAccount() async {
+    final token = accessToken;
+    if (token == null) {
+      return (success: false, error: 'Нет сессии');
+    }
+    try {
+      final url = Uri.parse('${AppConfig.apiUrl}/auth/account');
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        await logout();
+        return (success: true, error: null);
+      }
+      String msg = 'Ошибка ${response.statusCode}';
+      try {
+        final err = json.decode(response.body) as Map<String, dynamic>?;
+        if (err != null && err['message'] != null) {
+          msg = err['message'] as String;
+        }
+      } catch (_) {}
+      return (success: false, error: msg);
+    } catch (e) {
+      return (success: false, error: e.toString());
+    }
+  }
 }

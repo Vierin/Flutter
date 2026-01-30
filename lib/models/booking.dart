@@ -5,6 +5,7 @@ class Booking {
   final Service? service;
   final User? user;
   final Staff? staff;
+  final String? staffId;
   final String? notes;
 
   Booking({
@@ -14,10 +15,16 @@ class Booking {
     this.service,
     this.user,
     this.staff,
+    this.staffId,
     this.notes,
   });
 
+  /// ID сотрудника (из staff.id или staffId в ответе API).
+  String? get effectiveStaffId => staff?.id ?? staffId;
+
   factory Booking.fromJson(Map<String, dynamic> json) {
+    final staffIdRaw = json['staffId'];
+    final staffId = staffIdRaw != null ? staffIdRaw.toString() : null;
     return Booking(
       id: json['id'] as String,
       dateTime: DateTime.parse(json['dateTime'] as String),
@@ -31,6 +38,7 @@ class Booking {
       staff: json['staff'] != null
           ? Staff.fromJson(json['staff'] as Map<String, dynamic>)
           : null,
+      staffId: staffId,
       notes: json['notes'] as String?,
     );
   }
@@ -102,8 +110,13 @@ class Service {
   });
 
   factory Service.fromJson(Map<String, dynamic> json) {
+    final name = (json['name'] as String?) ??
+        (json['nameEn'] as String?) ??
+        (json['nameVi'] as String?) ??
+        (json['nameRu'] as String?) ??
+        '';
     return Service(
-      name: json['name'] as String,
+      name: name,
       price: json['price'] != null ? (json['price'] as num).toDouble() : null,
       duration: json['duration'] as int?,
     );
@@ -147,18 +160,23 @@ class User {
 }
 
 class Staff {
+  final String? id;
   final String name;
 
-  Staff({required this.name});
+  Staff({this.id, required this.name});
 
   factory Staff.fromJson(Map<String, dynamic> json) {
+    final idRaw = json['id'];
+    final id = idRaw == null ? null : idRaw.toString();
     return Staff(
-      name: json['name'] as String,
+      id: id,
+      name: json['name'] as String? ?? '—',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'name': name,
     };
   }

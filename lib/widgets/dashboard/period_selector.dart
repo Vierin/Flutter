@@ -3,7 +3,7 @@ import '../../constants/colors.dart';
 
 enum Period { sevenDays, thirtyDays, oneYear }
 
-class PeriodSelector extends StatefulWidget {
+class PeriodSelector extends StatelessWidget {
   final Period value;
   final ValueChanged<Period> onValueChange;
 
@@ -12,13 +12,6 @@ class PeriodSelector extends StatefulWidget {
     required this.value,
     required this.onValueChange,
   });
-
-  @override
-  State<PeriodSelector> createState() => _PeriodSelectorState();
-}
-
-class _PeriodSelectorState extends State<PeriodSelector> {
-  bool _isOpen = false;
 
   String _getPeriodLabel(Period period) {
     switch (period) {
@@ -31,116 +24,95 @@ class _PeriodSelectorState extends State<PeriodSelector> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        GestureDetector(
-          onTap: () => setState(() => _isOpen = !_isOpen),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundPrimary,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.borderSecondary),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _getPeriodLabel(widget.value),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Transform.rotate(
-                  angle: _isOpen ? 3.14159 : 0,
-                  child: const Text(
-                    '▼',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (_isOpen)
-          Positioned(
-            top: 50,
-            left: 0,
-            right: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.backgroundPrimary,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.borderPrimary),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    offset: const Offset(0, 2),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildPeriodItem(Period.sevenDays),
-                  _buildPeriodItem(Period.thirtyDays),
-                  _buildPeriodItem(Period.oneYear),
-                ],
-              ),
-            ),
-          ),
-        if (_isOpen)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => setState(() => _isOpen = false),
-              child: Container(color: Colors.transparent),
-            ),
-          ),
+  Future<void> _showPeriodMenu(BuildContext context) async {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+    final position = box.localToGlobal(Offset.zero);
+    final size = box.size;
+
+    final selected = await showMenu<Period>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy + size.height,
+        position.dx + size.width,
+        position.dy + size.height + 200,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      color: AppColors.backgroundPrimary,
+      elevation: 8,
+      items: [
+        _buildMenuItem(Period.sevenDays),
+        _buildMenuItem(Period.thirtyDays),
+        _buildMenuItem(Period.oneYear),
       ],
+    );
+
+    if (selected != null) {
+      onValueChange(selected);
+    }
+  }
+
+  PopupMenuItem<Period> _buildMenuItem(Period period) {
+    final isSelected = value == period;
+    return PopupMenuItem<Period>(
+      value: period,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              _getPeriodLabel(period),
+              style: TextStyle(
+                fontSize: 14,
+                color: isSelected ? AppColors.primary500 : AppColors.textPrimary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ),
+          if (isSelected)
+            const Icon(Icons.check, size: 20, color: AppColors.primary500),
+        ],
+      ),
     );
   }
 
-  Widget _buildPeriodItem(Period period) {
-    final isSelected = widget.value == period;
-    return GestureDetector(
-      onTap: () {
-        widget.onValueChange(period);
-        setState(() => _isOpen = false);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary50 : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                _getPeriodLabel(period),
-                style: TextStyle(
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showPeriodMenu(context),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundPrimary,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.borderSecondary),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _getPeriodLabel(value),
+                style: const TextStyle(
                   fontSize: 14,
-                  color: isSelected
-                      ? AppColors.primary500
-                      : AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.keyboard_arrow_down,
+                size: 20,
+                color: AppColors.textSecondary,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-

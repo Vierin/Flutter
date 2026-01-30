@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/app_config.dart';
-import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_shell.dart';
 import 'services/auth_service.dart';
 
 Future<void> main() async {
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AuthService(),
       child: MaterialApp(
-        title: 'Henzo Mobile',
+        title: 'Henzo',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
@@ -54,7 +54,7 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (auth.isAuthenticated) {
-          return const DashboardScreen();
+          return const MainShell();
         }
         return const LoginScreen();
       },
