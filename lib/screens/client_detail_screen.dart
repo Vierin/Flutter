@@ -46,7 +46,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
     }
     setState(() => _loading = true);
     try {
-      final all = await DashboardApiService.getOwnerBookings(token);
+      final all = await context.read<BookingsCache>().getBookings(token);
       final list = all
           .where((b) =>
               (b.user?.email ?? b.user?.phone ?? b.user?.name ?? '').trim() ==
@@ -95,6 +95,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
     if (token == null) return;
     await DashboardApiService.cancelBooking(token, id);
     if (mounted) {
+      context.read<BookingsCache>().invalidate();
       _loadData();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         const SnackBar(content: Text('Запись отменена'), backgroundColor: Colors.orange),
@@ -119,6 +120,7 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
     if (token == null) return;
     await DashboardApiService.rejectBooking(token, id);
     if (mounted) {
+      context.read<BookingsCache>().invalidate();
       _loadData();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         const SnackBar(content: Text('Отклонено'), backgroundColor: Colors.orange),

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../constants/colors.dart';
 import '../../models/salon.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import 'booking_link_screen.dart';
 
@@ -38,7 +39,7 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
     }
     setState(() => _loading = true);
     try {
-      final salon = await DashboardApiService.getCurrentSalon(token);
+      final salon = await context.read<SalonCache>().getSalon(token);
       final prefs = await SharedPreferences.getInstance();
       final savedDays = prefs.getInt(_kBookingPeriodKey);
       if (mounted) {
@@ -64,7 +65,8 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
         ..._salon!.toUpdatePayload(),
         'autoConfirmBookings': value,
       });
-      final updated = await DashboardApiService.getCurrentSalon(token);
+      context.read<SalonCache>().invalidate();
+      final updated = await context.read<SalonCache>().getSalon(token);
       if (mounted) setState(() => _salon = updated);
     } catch (_) {
       if (mounted) {

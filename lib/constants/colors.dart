@@ -97,4 +97,16 @@ class AppColors {
   static const statusCanceled = Color(0xFFEF4444); // Red
   static const statusCompleted = Color(0xFF6B7280); // Gray
   static const statusPending = Color(0xFFF59E0B); // Yellow
+
+  // Analytics screen (purple/teal theme)
+  static const analyticsPurple = Color(0xFF9C27B0);
+  static const analyticsPurpleLight = Color(0xFFE1BEE7);
+  static const analyticsTeal = Color(0xFF14B8A6);
+  static const analyticsTealLight = Color(0xFF99F6E4);
+  static const analyticsSleepersRed = Color(0xFFEF4444);
+  static const analyticsExpensesOrange = Color(0xFFFF9800);
+
+  // Profile screen
+  static const profilePurple = Color(0xFF9C27B0);
+  static const profilePurpleLight = Color(0xFFE1BEE7);
 }

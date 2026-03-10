@@ -57,7 +57,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
       return;
     }
     try {
-      final salon = await DashboardApiService.getCurrentSalon(token);
+      final salon = await context.read<SalonCache>().getSalon(token);
       final services = salon != null
           ? await ServicesApiService.getBySalon(token, salon.id)
           : <ServiceItem>[];

@@ -3,9 +3,16 @@ import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../models/booking.dart';
 import '../../models/salon.dart';
+import '../../utils/auth_load_helper.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/bookings_cache.dart';
+import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
+import '../../widgets/dashboard/dashboard_header_pill.dart';
+import '../../widgets/dashboard/dashboard_link_card.dart';
+import '../../widgets/dashboard/dashboard_loading_card.dart';
+import '../../widgets/dashboard/dashboard_setup_card.dart';
 import '../../widgets/dashboard/upcoming_bookings_list.dart';
 import '../app_settings_screen.dart';
 import '../notifications_screen.dart';
@@ -46,8 +53,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
     try {
-      final salon = await DashboardApiService.getCurrentSalon(token);
-      final bookings = await DashboardApiService.getOwnerBookings(token);
+      final salon = await context.read<SalonCache>().getSalon(token);
+      final bookings = await context.read<BookingsCache>().getBookings(token);
       if (mounted) {
         setState(() {
           _salon = salon;
@@ -83,6 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final ok = await DashboardApiService.confirmBooking(token, bookingId);
       if (!mounted) return;
       if (ok) {
+        context.read<BookingsCache>().invalidate();
         await _loadData();
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           const SnackBar(
@@ -119,6 +127,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final ok = await DashboardApiService.cancelBooking(token, bookingId);
       if (!mounted) return;
       if (ok) {
+        context.read<BookingsCache>().invalidate();
         await _loadData();
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           const SnackBar(
@@ -163,6 +172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final ok = await DashboardApiService.rejectBooking(token, bookingId);
       if (!mounted) return;
       if (ok) {
+        context.read<BookingsCache>().invalidate();
         await _loadData();
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           const SnackBar(
@@ -258,7 +268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ),
                           ),
-                          _buildHeaderIconPill(
+                          DashboardHeaderIconPill(
                             icon: Icons.settings_outlined,
                             onTap: () => Navigator.push(
                               context,
@@ -305,9 +315,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 16),
                 ],
                 if (_isLoading)
-                  _buildLoadingCard()
+                  const DashboardLoadingCard()
                 else if (_salon == null)
-                  _buildSetupCard()
+                  DashboardSetupCard(
+                    onSetupTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SalonSetupScreen(
+                          onSaved: () {
+                            Navigator.pop(context);
+                            _loadData();
+                          },
+                        ),
+                      ),
+                    ),
+                  )
                 else
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -342,198 +364,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildLoadingCard() {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.symmetric(vertical: 48),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(color: AppColors.primary500),
-            const SizedBox(height: 16),
-            Text(
-              'Загрузка данных салона...',
-              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSetupCard() {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundPrimary,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            offset: const Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Text(
-            'Setup Required',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Please complete your salon setup to start using the dashboard.',
-            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => SalonSetupScreen(
-                  onSaved: () {
-                    Navigator.pop(context);
-                    _loadData();
-                  },
-                ),
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary500,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text(
-              'Setup Salon',
-              style: TextStyle(
-                color: AppColors.textInverse,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLinkCard({
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: color,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderPrimary),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 32, color: AppColors.primary500),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderPill({
-    required IconData icon,
-    required String label,
-    VoidCallback? onTap,
-  }) {
-    final child = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundPrimary,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderPrimary),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.warning500),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-    if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: child,
-      );
-    }
-    return child;
-  }
-
-  Widget _buildHeaderIconPill({required IconData icon, VoidCallback? onTap}) {
-    final child = Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundPrimary,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderPrimary),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Icon(icon, size: 20, color: AppColors.textPrimary),
-    );
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: child,
-    );
-  }
 }

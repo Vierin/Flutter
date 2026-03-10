@@ -44,7 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     try {
-      final salon = await DashboardApiService.getCurrentSalon(token);
+      final salon = await context.read<SalonCache>().getSalon(token);
       if (salon == null || !mounted) {
         if (mounted) setState(() => _loadingCounts = false);
         return;
@@ -266,7 +266,7 @@ class _ProfileGridCard extends StatelessWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: _ProfileColors.purpleLight,
+                        color: AppColors.profilePurpleLight,
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
@@ -275,7 +275,7 @@ class _ProfileGridCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: _ProfileColors.purple,
+                          color: AppColors.profilePurple,
                         ),
                       ),
                     ),

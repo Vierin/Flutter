@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../models/booking.dart';
 import '../../utils/currency_format.dart';
 import '../../models/service_item.dart';
 import '../../models/staff_member.dart';
+import '../../services/cache/bookings_cache.dart';
+import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../services/services_api_service.dart';
 import '../../services/staff_api_service.dart';
@@ -139,7 +142,7 @@ class _NewBookingModalState extends State<NewBookingModal> {
     try {
       String? sid = widget.salonId;
       if (sid == null) {
-        final salon = await DashboardApiService.getCurrentSalon(token);
+        final salon = await context.read<SalonCache>().getSalon(token);
         if (!mounted) return;
         sid = salon?.id;
         if (sid == null) {
@@ -299,6 +302,7 @@ class _NewBookingModalState extends State<NewBookingModal> {
         );
       }
       if (!mounted) return;
+      context.read<BookingsCache>().invalidate();
       widget.onSaved();
       Navigator.of(context).pop();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(

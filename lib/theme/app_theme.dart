@@ -95,6 +95,15 @@ class AppTheme {
         color: AppColors.primary500,
         circularTrackColor: AppColors.neutral200,
       ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        insetPadding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 6,
+        contentTextStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+        backgroundColor: AppColors.neutral800,
+        showCloseIcon: false,
+      ),
     );
   }
 }

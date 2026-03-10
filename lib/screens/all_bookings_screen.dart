@@ -36,7 +36,7 @@ class _AllBookingsScreenState extends State<AllBookingsScreen> {
     }
     setState(() => _loading = true);
     try {
-      final list = await DashboardApiService.getOwnerBookings(token);
+      final list = await context.read<BookingsCache>().getBookings(token);
       if (mounted) {
         setState(() {
           _bookings = list..sort((a, b) => b.dateTime.compareTo(a.dateTime));
@@ -84,6 +84,7 @@ class _AllBookingsScreenState extends State<AllBookingsScreen> {
     if (token == null) return;
     await DashboardApiService.cancelBooking(token, id);
     if (mounted) {
+      context.read<BookingsCache>().invalidate();
       _loadData();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         const SnackBar(
@@ -114,6 +115,7 @@ class _AllBookingsScreenState extends State<AllBookingsScreen> {
     if (token == null) return;
     await DashboardApiService.rejectBooking(token, id);
     if (mounted) {
+      context.read<BookingsCache>().invalidate();
       _loadData();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         const SnackBar(

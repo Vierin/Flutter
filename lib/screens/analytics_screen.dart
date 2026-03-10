@@ -4,16 +4,6 @@ import '../constants/colors.dart';
 import '../utils/currency_format.dart';
 import 'period_picker_screen.dart';
 
-// Analytics-specific colors (purple/teal theme from design)
-class _AnalyticsColors {
-  static const purple = Color(0xFF9C27B0);
-  static const purpleLight = Color(0xFFE1BEE7);
-  static const teal = Color(0xFF14B8A6);
-  static const tealLight = Color(0xFF99F6E4);
-  static const sleepersRed = Color(0xFFEF4444);
-  static const expensesOrange = Color(0xFFFF9800);
-}
-
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
 
@@ -184,7 +174,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(3),
                         color: i == _currentPage
-                            ? _AnalyticsColors.purple
+                            ? AppColors.analyticsPurple
                             : AppColors.neutral300,
                       ),
                     ),
@@ -220,8 +210,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   title: 'Visits',
                   value: '$_totalVisits',
                   icon: Icons.people_outline,
-                  iconBg: _AnalyticsColors.tealLight,
-                  iconColor: _AnalyticsColors.teal,
+                  iconBg: AppColors.analyticsTealLight,
+                  iconColor: AppColors.analyticsteal,
                 ),
               ),
               const SizedBox(width: 12),
@@ -230,8 +220,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   title: 'Average',
                   value: formatVnd(_averageClientCheck),
                   icon: Icons.receipt_long_outlined,
-                  iconBg: _AnalyticsColors.tealLight,
-                  iconColor: _AnalyticsColors.teal,
+                  iconBg: AppColors.analyticsTealLight,
+                  iconColor: AppColors.analyticsteal,
                 ),
               ),
             ],
@@ -242,8 +232,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             value: formatVnd(_totalSales),
             fullWidth: true,
             icon: Icons.trending_up,
-            iconBg: _AnalyticsColors.purpleLight,
-            iconColor: _AnalyticsColors.purple,
+            iconBg: AppColors.analyticsPurpleLight,
+            iconColor: AppColors.analyticsPurple,
           ),
         ],
       ),
@@ -262,8 +252,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             value: '$_totalServices',
             fullWidth: true,
             icon: Icons.miscellaneous_services_outlined,
-            iconBg: _AnalyticsColors.purpleLight,
-            iconColor: _AnalyticsColors.purple,
+            iconBg: AppColors.analyticsPurpleLight,
+            iconColor: AppColors.analyticsPurple,
           ),
           const SizedBox(height: 12),
           _buildAnalyticsMiniCard(
@@ -271,8 +261,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             value: _mostPopularService,
             fullWidth: true,
             icon: Icons.star_outline,
-            iconBg: _AnalyticsColors.purpleLight,
-            iconColor: _AnalyticsColors.purple,
+            iconBg: AppColors.analyticsPurpleLight,
+            iconColor: AppColors.analyticsPurple,
           ),
         ],
       ),
@@ -320,8 +310,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     Color? iconBg,
     Color? iconColor,
   }) {
-    final bg = iconBg ?? _AnalyticsColors.purpleLight;
-    final icoColor = iconColor ?? _AnalyticsColors.purple;
+    final bg = iconBg ?? AppColors.analyticsPurpleLight;
+    final icoColor = iconColor ?? AppColors.analyticsPurple;
     return Container(
       width: fullWidth ? double.infinity : null,
       padding: const EdgeInsets.all(12),
@@ -432,18 +422,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   if (regularPct > 0)
                     Expanded(
                       flex: (regularPct * 1000).round().clamp(1, 1000),
-                      child: Container(color: _AnalyticsColors.purpleLight),
+                      child: Container(color: AppColors.analyticsPurpleLight),
                     ),
                   if (newPct > 0)
                     Expanded(
                       flex: (newPct * 1000).round().clamp(1, 1000),
-                      child: Container(color: _AnalyticsColors.tealLight),
+                      child: Container(color: AppColors.analyticsTealLight),
                     ),
                   if (sleepersPct > 0)
                     Expanded(
                       flex: (sleepersPct * 1000).round().clamp(1, 1000),
                       child: Container(
-                        color: _AnalyticsColors.sleepersRed.withValues(
+                        color: AppColors.analyticsSleepersRed.withValues(
                           alpha: 0.5,
                         ),
                       ),
@@ -461,17 +451,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             runSpacing: 8,
             children: [
               _buildLegendDot(
-                _AnalyticsColors.purpleLight,
+                AppColors.analyticsPurpleLight,
                 'Регулярные',
                 '2+ визитов за 3 мес.',
               ),
               _buildLegendDot(
-                _AnalyticsColors.tealLight,
+                AppColors.analyticsTealLight,
                 'Новые',
                 'За выбранный период',
               ),
               _buildLegendDot(
-                _AnalyticsColors.sleepersRed.withValues(alpha: 0.5),
+                AppColors.analyticsSleepersRed.withValues(alpha: 0.5),
                 'Спящие',
                 'Без визитов 3 мес.',
               ),
@@ -530,9 +520,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             children: [
               Expanded(
                 child: _buildFinanceCard(
-                  iconBg: _AnalyticsColors.tealLight,
+                  iconBg: AppColors.analyticsTealLight,
                   icon: Icons.trending_up,
-                  iconColor: _AnalyticsColors.teal,
+                  iconColor: AppColors.analyticsteal,
                   title: 'Доходы',
                   value: _income,
                   onTap: () {},
@@ -541,11 +531,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildFinanceCard(
-                  iconBg: _AnalyticsColors.expensesOrange.withValues(
+                  iconBg: AppColors.analyticsExpensesOrange.withValues(
                     alpha: 0.2,
                   ),
                   icon: Icons.trending_down,
-                  iconColor: _AnalyticsColors.expensesOrange,
+                  iconColor: AppColors.analyticsExpensesOrange,
                   title: 'Расходы',
                   value: _expenses,
                   onTap: () {},
@@ -557,7 +547,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           _buildFinanceCard(
             iconBg: Colors.transparent,
             icon: Icons.account_balance_wallet_outlined,
-            iconColor: _AnalyticsColors.purple,
+            iconColor: AppColors.analyticsPurple,
             useOutline: false,
             title: 'Чистая прибыль',
             value: _netProfit,
@@ -589,7 +579,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             borderRadius: BorderRadius.circular(8),
             border: useOutline
                 ? Border.all(
-                    color: _AnalyticsColors.purple.withValues(alpha: 0.5),
+                    color: AppColors.analyticsPurple.withValues(alpha: 0.5),
                   )
                 : null,
           ),
@@ -601,7 +591,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   color: iconBg,
                   shape: BoxShape.circle,
                   border: useOutline
-                      ? Border.all(color: _AnalyticsColors.purple)
+                      ? Border.all(color: AppColors.analyticsPurple)
                       : null,
                 ),
                 child: Icon(icon, size: 20, color: iconColor),

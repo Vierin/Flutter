@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../models/salon.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../widgets/address_picker_modal.dart';
 
@@ -62,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
     try {
-      final salon = await DashboardApiService.getCurrentSalon(token);
+      final salon = await context.read<SalonCache>().getSalon(token);
       if (!mounted) return;
       setState(() {
         _salon = salon;
@@ -151,6 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         result = await DashboardApiService.createCurrentSalon(token, payload);
       }
       if (!mounted) return;
+      context.read<SalonCache>().invalidate();
       setState(() {
         _salon = result;
         _salonSaving = false;

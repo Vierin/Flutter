@@ -39,7 +39,7 @@ class _StaffScreenState extends State<StaffScreen> {
       return;
     }
     try {
-      final salon = await DashboardApiService.getCurrentSalon(token);
+      final salon = await context.read<SalonCache>().getSalon(token);
       final staff = salon != null
           ? await StaffApiService.getBySalon(token, salon.id)
           : <StaffMember>[];

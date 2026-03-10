@@ -7,6 +7,8 @@ import 'config/app_config.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'services/auth_service.dart';
+import 'services/cache/bookings_cache.dart';
+import 'services/cache/salon_cache.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -28,8 +30,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthService(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => SalonCache()),
+        ChangeNotifierProvider(create: (_) => BookingsCache()),
+      ],
       child: MaterialApp(
         title: 'Henzo',
         theme: AppTheme.light,

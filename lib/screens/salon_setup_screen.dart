@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants/colors.dart';
 import '../services/auth_service.dart';
+import '../services/cache/salon_cache.dart';
 import '../services/dashboard_api_service.dart';
 
 class SalonSetupScreen extends StatefulWidget {
@@ -61,6 +62,7 @@ class _SalonSetupScreenState extends State<SalonSetupScreen> {
       };
       await DashboardApiService.createCurrentSalon(token, payload);
       if (!mounted) return;
+      context.read<SalonCache>().invalidate();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         const SnackBar(
           content: Text('Салон создан'),

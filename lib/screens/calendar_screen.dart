@@ -7,6 +7,8 @@ import '../../models/salon.dart';
 import '../../models/staff_member.dart';
 import '../../models/time_block.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/bookings_cache.dart';
+import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../services/staff_api_service.dart';
 import '../../models/service_item.dart';
@@ -106,7 +108,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       return;
     }
     try {
-      final salon = await DashboardApiService.getCurrentSalon(token);
+      final salon = await context.read<SalonCache>().getSalon(token);
       List<Booking> bookings = [];
       List<StaffMember> staff = [];
       List<TimeBlock> timeBlocks = [];
@@ -114,7 +116,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         final now = DateTime.now();
         final start = now.subtract(const Duration(days: 30));
         final end = now.add(const Duration(days: 60));
-        bookings = await DashboardApiService.getOwnerBookings(token);
+        bookings = await context.read<BookingsCache>().getBookings(token);
         staff = await StaffApiService.getBySalon(token, salon.id);
         timeBlocks = await DashboardApiService.getTimeBlocks(
           token,
