@@ -131,8 +131,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      final message =
-          e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+      final message = e is Exception
+          ? e.toString().replaceFirst('Exception: ', '')
+          : e.toString();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(
           content: Text(message.length > 80 ? 'Ошибка отмены' : message),
@@ -175,10 +176,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(
-          content: Text('Ошибка: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
       );
     }
   }
@@ -248,7 +246,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                  padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -303,7 +301,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Link cards: Клиенты, Online booking
                 if (!_isLoading && _salon != null) ...[
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
                       children: [
                         Expanded(
@@ -311,7 +309,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             title: 'Клиенты',
                             icon: Icons.people_outline,
                             color: AppColors.primary100,
-                            onTap: () => Navigator.of(context).pushNamed('/clients'),
+                            onTap: () =>
+                                Navigator.of(context).pushNamed('/clients'),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -320,13 +319,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             title: 'Online booking',
                             icon: Icons.calendar_month_outlined,
                             color: AppColors.secondary100,
-                            onTap: () => Navigator.of(context).pushNamed('/online-booking'),
+                            onTap: () => Navigator.of(
+                              context,
+                            ).pushNamed('/online-booking'),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                 ],
                 if (_isLoading)
                   _buildLoadingCard()
@@ -334,12 +335,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   _buildSetupCard()
                 else
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: UpcomingBookingsList(
                       title: 'Today bookings',
                       bookings: todayBookings,
                       loading: _isLoading,
-                      onViewAll: () => Navigator.of(context).pushNamed('/all-bookings'),
+                      onViewAll: () =>
+                          Navigator.of(context).pushNamed('/all-bookings'),
                       onEditBooking: _handleEditBooking,
                       onCancelBooking: _handleCancelBooking,
                       onConfirmBooking: _handleConfirmBooking,

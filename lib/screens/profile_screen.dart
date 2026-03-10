@@ -51,7 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -122,11 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              Icon(
-                Icons.launch,
-                size: 22,
-                color: AppColors.textSecondary,
-              ),
+              Icon(Icons.launch, size: 22, color: AppColors.textSecondary),
             ],
           ),
         ),
@@ -154,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           expand: false,
           builder: (_, scrollController) => SingleChildScrollView(
             controller: scrollController,
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
@@ -189,7 +185,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _ProfileColors.purpleLight,
                     borderRadius: BorderRadius.circular(10),
@@ -219,7 +218,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.check_circle, size: 20, color: _ProfileColors.teal),
+                        Icon(
+                          Icons.check_circle,
+                          size: 20,
+                          color: _ProfileColors.teal,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -241,7 +244,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                        const SnackBar(content: Text('Продление подписки — в разработке')),
+                        const SnackBar(
+                          content: Text('Продление подписки — в разработке'),
+                        ),
                       );
                     },
                     style: FilledButton.styleFrom(
@@ -301,7 +306,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: 'Work schedule',
                 onTap: () {
                   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(content: Text('Work schedule — в разработке')),
+                    const SnackBar(
+                      content: Text('Work schedule — в разработке'),
+                    ),
                   );
                 },
               ),
@@ -312,7 +319,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: 'Profile info',
                 onTap: () {
                   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(content: Text('Profile info — в разработке')),
+                    const SnackBar(
+                      content: Text('Profile info — в разработке'),
+                    ),
                   );
                 },
               ),
@@ -322,7 +331,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ],
     );
   }
-
 }
 
 class _ProfileGridCard extends StatelessWidget {

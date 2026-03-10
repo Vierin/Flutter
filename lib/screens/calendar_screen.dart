@@ -449,7 +449,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         decoration: BoxDecoration(
           color: AppColors.backgroundPrimary,
           borderRadius: BorderRadius.circular(20),
@@ -570,7 +570,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         body: SafeArea(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(12),
               child: Text(
                 'Сначала настройте салон',
                 style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
@@ -600,7 +600,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     children: [
                       // Header: Month/Year + Today, Expand
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -617,34 +617,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               children: [
                                 _headerPill(
                                   label: 'Сегодня',
-                                selected: _isToday(_selectedDate),
-                                onTap: () {
-                                  setState(
-                                    () => _selectedDate = DateTime.now(),
-                                  );
-                                  final page = _weekIndexForDate(
-                                    DateTime.now(),
-                                  );
-                                  if (page >= 0 && page < _dayStripTotalWeeks) {
-                                    _dayStripPageController.animateToPage(
-                                      page,
-                                      duration: const Duration(
-                                        milliseconds: 300,
-                                      ),
-                                      curve: Curves.easeInOut,
+                                  selected: _isToday(_selectedDate),
+                                  onTap: () {
+                                    setState(
+                                      () => _selectedDate = DateTime.now(),
                                     );
-                                  }
-                                },
+                                    final page = _weekIndexForDate(
+                                      DateTime.now(),
+                                    );
+                                    if (page >= 0 &&
+                                        page < _dayStripTotalWeeks) {
+                                      _dayStripPageController.animateToPage(
+                                        page,
+                                        duration: const Duration(
+                                          milliseconds: 300,
+                                        ),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    }
+                                  },
                                 ),
                                 const SizedBox(width: 8),
                                 _headerPill(
                                   label: _expandedView
-                                    ? 'Свернуть'
-                                    : 'Развернуть',
-                                selected: _expandedView,
-                                onTap: () => setState(
-                                  () => _expandedView = !_expandedView,
-                                ),
+                                      ? 'Свернуть'
+                                      : 'Развернуть',
+                                  selected: _expandedView,
+                                  onTap: () => setState(
+                                    () => _expandedView = !_expandedView,
+                                  ),
                                 ),
                               ],
                             ),
@@ -665,7 +666,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 100),
                   child: _buildTimeGrid(),
                 ),
               ),
@@ -815,15 +816,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         itemCount: _dayStripTotalWeeks,
         padEnds: true,
         physics: const PageScrollPhysics(),
-        onPageChanged: (index) {
-          final monday = _dateForWeekIndex(index);
-          final weekContainsSelected =
-              _selectedDate.isAfter(monday.subtract(const Duration(days: 1))) &&
-              _selectedDate.isBefore(monday.add(const Duration(days: 7)));
-          if (!weekContainsSelected) {
-            setState(() => _selectedDate = monday);
-          }
-        },
+        // Не меняем активную дату при прокрутке — только по клику на ячейку
         itemBuilder: (context, index) {
           final monday = _dateForWeekIndex(index);
           final days = List<DateTime>.generate(
@@ -923,7 +916,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       height: 40,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         children: staffList
             .map(
               (s) => InkWell(

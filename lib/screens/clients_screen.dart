@@ -183,7 +183,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+            padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -220,15 +220,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 _FilterChip(
                   label: 'Спящие',
                   isSelected: _filter == ClientFilter.sleepers,
-                  onTap: () =>
-                      setState(() => _filter = ClientFilter.sleepers),
+                  onTap: () => setState(() => _filter = ClientFilter.sleepers),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
                   label: 'Белый список',
                   isSelected: _filter == ClientFilter.whiteList,
-                  onTap: () =>
-                      setState(() => _filter = ClientFilter.whiteList),
+                  onTap: () => setState(() => _filter = ClientFilter.whiteList),
                 ),
                 const SizedBox(width: 8),
                 _FilterChip(
@@ -293,7 +291,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
             child: Material(
               color: AppColors.primary100,
               borderRadius: BorderRadius.circular(12),
@@ -309,7 +307,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     vertical: 14,
-                    horizontal: 20,
+                    horizontal: 12,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
