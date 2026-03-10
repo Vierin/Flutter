@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../constants/colors.dart';
 import '../utils/currency_format.dart';
+import 'period_picker_screen.dart';
 
 // Analytics-specific colors (purple/teal theme from design)
 class _AnalyticsColors {
@@ -33,19 +34,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Future<void> _pickDateRange() async {
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      initialDateRange: DateTimeRange(start: _rangeStart, end: _rangeEnd),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: Theme.of(
-            context,
-          ).colorScheme.copyWith(primary: _AnalyticsColors.purple),
-        ),
-        child: child!,
-      ),
+    final picked = await PeriodPickerScreen.show(
+      context,
+      DateTimeRange(start: _rangeStart, end: _rangeEnd),
     );
     if (picked != null && mounted) {
       setState(() {
@@ -80,7 +71,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       backgroundColor: AppColors.backgroundSecondary,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -93,6 +84,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   color: AppColors.textPrimary,
                 ),
               ),
+
               const SizedBox(height: 16),
               // Period picker
               Row(
@@ -147,20 +139,32 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ],
               ),
               const SizedBox(height: 24),
+              _buildClientsCard(),
+              const SizedBox(height: 24),
               // Slider: Доходы и расходы | Sales | Services
               SizedBox(
-                height: 340,
+                height: 230,
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: (i) => setState(() => _currentPage = i),
+                  padEnds: false,
                   children: [
-                    _buildIncomeExpensesSlide(),
-                    _buildSalesSlide(),
-                    _buildServicesSlide(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: _buildIncomeExpensesSlide(),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: _buildSalesSlide(),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: _buildServicesSlide(),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(3, (i) {
@@ -172,12 +176,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         curve: Curves.easeOut,
                       );
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: 8,
-                      height: 8,
+                      width: i == _currentPage ? 20 : 8,
+                      height: 6,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(3),
                         color: i == _currentPage
                             ? _AnalyticsColors.purple
                             : AppColors.neutral300,
@@ -186,8 +191,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   );
                 }),
               ),
-              const SizedBox(height: 24),
-              _buildClientsCard(),
               const SizedBox(height: 32),
             ],
           ),
@@ -204,36 +207,31 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildSalesSlide() {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 16),
+    return _buildSlideCard(
+      title: 'Sales',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 12),
-            child: Text(
-              'Sales',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
           Row(
             children: [
               Expanded(
                 child: _buildAnalyticsMiniCard(
-                  title: 'Total visits',
+                  title: 'Visits',
                   value: '$_totalVisits',
+                  icon: Icons.people_outline,
+                  iconBg: _AnalyticsColors.tealLight,
+                  iconColor: _AnalyticsColors.teal,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildAnalyticsMiniCard(
-                  title: 'Average client check',
+                  title: 'Average',
                   value: formatVnd(_averageClientCheck),
+                  icon: Icons.receipt_long_outlined,
+                  iconBg: _AnalyticsColors.tealLight,
+                  iconColor: _AnalyticsColors.teal,
                 ),
               ),
             ],
@@ -243,6 +241,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             title: 'Total sales',
             value: formatVnd(_totalSales),
             fullWidth: true,
+            icon: Icons.trending_up,
+            iconBg: _AnalyticsColors.purpleLight,
+            iconColor: _AnalyticsColors.purple,
           ),
         ],
       ),
@@ -250,46 +251,36 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildServicesSlide() {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 16),
+    return _buildSlideCard(
+      title: 'Services',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 12),
-            child: Text(
-              'Services',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
           _buildAnalyticsMiniCard(
             title: 'Total services',
             value: '$_totalServices',
             fullWidth: true,
+            icon: Icons.miscellaneous_services_outlined,
+            iconBg: _AnalyticsColors.purpleLight,
+            iconColor: _AnalyticsColors.purple,
           ),
           const SizedBox(height: 12),
           _buildAnalyticsMiniCard(
             title: 'Most popular service',
             value: _mostPopularService,
             fullWidth: true,
+            icon: Icons.star_outline,
+            iconBg: _AnalyticsColors.purpleLight,
+            iconColor: _AnalyticsColors.purple,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAnalyticsMiniCard({
-    required String title,
-    required String value,
-    bool fullWidth = false,
-  }) {
+  Widget _buildSlideCard({required String title, required Widget child}) {
     return Container(
-      width: fullWidth ? double.infinity : null,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.backgroundPrimary,
@@ -303,23 +294,75 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             title,
             style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalyticsMiniCard({
+    required String title,
+    required String value,
+    bool fullWidth = false,
+    IconData? icon,
+    Color? iconBg,
+    Color? iconColor,
+  }) {
+    final bg = iconBg ?? _AnalyticsColors.purpleLight;
+    final icoColor = iconColor ?? _AnalyticsColors.purple;
+    return Container(
+      width: fullWidth ? double.infinity : null,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundSecondary,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+              child: Icon(icon, size: 20, color: icoColor),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -474,34 +517,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Доходы и расходы',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Material(
-                color: _AnalyticsColors.purpleLight,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  onTap: () {},
-                  customBorder: const CircleBorder(),
-                  child: const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Icon(
-                      Icons.add,
-                      color: _AnalyticsColors.purple,
-                      size: 20,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          const Text(
+            'Доходы и расходы',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 16),
           Row(
@@ -536,7 +558,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             iconBg: Colors.transparent,
             icon: Icons.account_balance_wallet_outlined,
             iconColor: _AnalyticsColors.purple,
-            useOutline: true,
+            useOutline: false,
             title: 'Чистая прибыль',
             value: _netProfit,
             onTap: () {},
@@ -589,23 +611,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ],
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(

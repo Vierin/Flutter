@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
-import '../../models/salon.dart';
-import '../../models/service_item.dart';
-import '../../models/staff_member.dart';
 import '../../services/auth_service.dart';
-import '../../services/dashboard_api_service.dart';
-import '../../services/services_api_service.dart';
-import '../../services/staff_api_service.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'calendar_screen.dart';
@@ -23,12 +17,22 @@ class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  State<MainShell> createState() => MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+/// Состояние MainShell — можно использовать для навигации на экраны первой вкладки с сохранением нижней панели.
+class MainShellState extends State<MainShell> {
   int _currentIndex = 0;
-  final GlobalKey<NavigatorState> _homeNavigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> _homeNavigatorKey =
+      GlobalKey<NavigatorState>();
+
+  /// Переключиться на первую вкладку и открыть маршрут (например /staff, /services).
+  void navigateToTab0Route(String routeName) {
+    setState(() => _currentIndex = 0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _homeNavigatorKey.currentState?.pushNamed(routeName);
+    });
+  }
 
   Widget _buildHomeNavigator() {
     return Navigator(
@@ -45,7 +49,9 @@ class _MainShellState extends State<MainShell> {
           case '/clients':
             return MaterialPageRoute(builder: (_) => const ClientsScreen());
           case '/online-booking':
-            return MaterialPageRoute(builder: (_) => const OnlineBookingScreen());
+            return MaterialPageRoute(
+              builder: (_) => const OnlineBookingScreen(),
+            );
           case '/all-bookings':
             return MaterialPageRoute(builder: (_) => const AllBookingsScreen());
           default:
@@ -65,50 +71,8 @@ class _MainShellState extends State<MainShell> {
   Future<void> _openNewBooking() async {
     final token = context.read<AuthService>().accessToken;
     if (token == null || token.isEmpty) return;
-    Salon? salon;
-    try {
-      salon = await DashboardApiService.getCurrentSalon(token);
-    } catch (_) {}
-    if (!mounted) return;
-    if (salon == null) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Загрузите данные салона'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    List<ServiceItem> services = [];
-    List<StaffMember> staffMembers = [];
-    try {
-      services = await ServicesApiService.getBySalon(token, salon.id);
-      staffMembers = await StaffApiService.getBySalon(token, salon.id);
-    } catch (_) {}
-    if (!mounted) return;
-    if (services.isEmpty) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Добавьте услуги в салон'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    if (staffMembers.isEmpty) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Добавьте сотрудников'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
     await NewBookingModal.show(
       context,
-      salonId: salon.id,
-      services: services,
-      staffMembers: staffMembers,
       accessToken: token,
       onSaved: () {},
       getAccessToken: () async {
@@ -135,7 +99,7 @@ class _MainShellState extends State<MainShell> {
               ),
             ],
           ),
-          constraints: const BoxConstraints(minHeight: 48, maxHeight: 64),
+          constraints: const BoxConstraints(minHeight: 42, maxHeight: 56),
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

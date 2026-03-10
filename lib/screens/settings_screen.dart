@@ -237,8 +237,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  static const _salonLinkBase = 'https://henzo.app/salon/';
-
   InputDecoration _inputDecoration({required String hint, bool alignLabelWithHint = false}) {
     return InputDecoration(
       hintText: hint,
@@ -268,73 +266,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 6),
         child,
-      ],
-    );
-  }
-
-  Widget _salonLinkRow(BuildContext context) {
-    final slug = _salon?.slug ?? '';
-    final link = slug.isEmpty ? '' : '$_salonLinkBase$slug';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundTertiary,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderPrimary),
-      ),
-      child: Text(
-        link.isEmpty ? '—' : link,
-        style: TextStyle(fontSize: 14, color: link.isEmpty ? AppColors.textSecondary : AppColors.textPrimary),
-      ),
-    );
-  }
-
-  Widget _salonLinkButtons(BuildContext context) {
-    final slug = _salon?.slug ?? '';
-    final link = slug.isEmpty ? '' : '$_salonLinkBase$slug';
-    final style = OutlinedButton.styleFrom(
-      foregroundColor: AppColors.textPrimary,
-      backgroundColor: AppColors.neutral200,
-      side: const BorderSide(color: AppColors.borderPrimary),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    );
-    return Row(
-      children: [
-        OutlinedButton.icon(
-          onPressed: link.isEmpty
-              ? null
-              : () {
-                  Clipboard.setData(ClipboardData(text: link));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Ссылка скопирована')),
-                  );
-                },
-          style: style,
-          icon: const Icon(Icons.copy, size: 18),
-          label: const Text('Копировать'),
-        ),
-        const SizedBox(width: 12),
-        OutlinedButton.icon(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Поделиться — скоро')),
-            );
-          },
-          style: style,
-          icon: const Icon(Icons.share_outlined, size: 18),
-          label: const Text('Поделиться'),
-        ),
-        const SizedBox(width: 12),
-        OutlinedButton.icon(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('QR-код — скоро')),
-            );
-          },
-          style: style,
-          icon: const Icon(Icons.qr_code_outlined, size: 18),
-          label: const Text('QR-код'),
-        ),
       ],
     );
   }
@@ -390,13 +321,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(24),
                   children: [
-                    // Заголовок блока «Информация о салоне»
-                    Text(
-                      'Информация о салоне',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                    // Заголовок блока «Настройки профиля»
+                    const Center(
+                      child: Text(
+                        'Настройки профиля',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -487,13 +420,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           ),
                                         ),
                                       ),
-                                      const SizedBox(height: 16),
-                                      _labeledField(
-                                        label: 'Ссылка на салон',
-                                        child: _salonLinkRow(context),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      _salonLinkButtons(context),
                                       const SizedBox(height: 20),
                                       SizedBox(
                                         height: 44,

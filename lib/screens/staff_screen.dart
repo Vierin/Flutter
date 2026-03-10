@@ -470,6 +470,7 @@ class _StaffScreenState extends State<StaffScreen> {
             color: AppColors.textPrimary,
           ),
         ),
+        centerTitle: true,
         backgroundColor: AppColors.backgroundPrimary,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,

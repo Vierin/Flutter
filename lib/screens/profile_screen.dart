@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/colors.dart';
+import '../services/auth_service.dart';
+import '../services/dashboard_api_service.dart';
+import '../services/services_api_service.dart';
+import '../services/staff_api_service.dart';
+import 'main_shell.dart';
 import 'settings_screen.dart';
+import 'subscription_screen.dart';
+import 'work_schedule_screen.dart';
 
 // Profile theme colors (purple as in design)
 class _ProfileColors {
   static const purple = Color(0xFF9C27B0);
   static const purpleLight = Color(0xFFE1BEE7);
-  static const teal = Color(0xFF14B8A6);
 }
 
 class ProfileScreen extends StatefulWidget {
@@ -20,18 +27,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Placeholder: дата истечения подписки
   static const _expiredDate = '31.12.2025';
 
-  List<String> get _liteFeatures => [
-    '1 сотрудник',
-    'Автонапоминания',
-    'Аналитика базы клиентов',
-    'Электронная записная',
-    'Учёт доходов',
-    'Онлайн-запись через приложение',
-  ];
+  int _staffCount = 0;
+  int _servicesCount = 0;
+  bool _loadingCounts = true;
 
-  // Placeholder: загрузка с API позже
-  int get _staffCount => 0;
-  int get _servicesCount => 0;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadCounts());
+  }
+
+  Future<void> _loadCounts() async {
+    final token = context.read<AuthService>().accessToken;
+    if (token == null || token.isEmpty) {
+      if (mounted) setState(() { _loadingCounts = false; });
+      return;
+    }
+    try {
+      final salon = await DashboardApiService.getCurrentSalon(token);
+      if (salon == null || !mounted) {
+        if (mounted) setState(() => _loadingCounts = false);
+        return;
+      }
+      final results = await Future.wait([
+        StaffApiService.getBySalon(token, salon.id),
+        ServicesApiService.getBySalon(token, salon.id),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _staffCount = results[0].length;
+        _servicesCount = results[1].length;
+        _loadingCounts = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingCounts = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +72,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text(
           'Профиль',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 24,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
+        centerTitle: true,
         backgroundColor: AppColors.backgroundPrimary,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
@@ -58,18 +90,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildCurrentSubscriptionCard(),
             const SizedBox(height: 24),
             _buildFourCardsGrid(),
-            const SizedBox(height: 24),
-            TextButton.icon(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              ),
-              icon: const Icon(Icons.settings_outlined, size: 20),
-              label: const Text('Настройки'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.textSecondary,
-              ),
-            ),
           ],
         ),
       ),
@@ -80,7 +100,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: _showSubscriptionDetail,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+        ),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(16),
@@ -130,143 +153,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showSubscriptionDetail() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: DraggableScrollableSheet(
-          initialChildSize: 0.9,
-          minChildSize: 0.5,
-          maxChildSize: 1,
-          expand: false,
-          builder: (_, scrollController) => SingleChildScrollView(
-            controller: scrollController,
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.neutral300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Ваша подписка',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Истекла $_expiredDate',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: AppColors.error500,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _ProfileColors.purpleLight,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text(
-                    'Пробный период',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _ProfileColors.purple,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Описание пакета',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ..._liteFeatures.map(
-                  (f) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.check_circle,
-                          size: 20,
-                          color: _ProfileColors.teal,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            f,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  height: 50,
-                  child: FilledButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                        const SnackBar(
-                          content: Text('Продление подписки — в разработке'),
-                        ),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _ProfileColors.purple,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Продлить'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildFourCardsGrid() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -276,11 +162,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Expanded(
               child: _ProfileGridCard(
                 title: 'Работники',
-                count: _staffCount,
+                count: _loadingCounts ? null : _staffCount,
                 onTap: () {
-                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(content: Text('Работники — в разработке')),
-                  );
+                  context.findAncestorStateOfType<MainShellState>()?.navigateToTab0Route('/staff');
                 },
               ),
             ),
@@ -288,11 +172,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Expanded(
               child: _ProfileGridCard(
                 title: 'Сервисы',
-                count: _servicesCount,
+                count: _loadingCounts ? null : _servicesCount,
                 onTap: () {
-                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(content: Text('Сервисы — в разработке')),
-                  );
+                  context.findAncestorStateOfType<MainShellState>()?.navigateToTab0Route('/services');
                 },
               ),
             ),
@@ -304,26 +186,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Expanded(
               child: _ProfileGridCard(
                 title: 'Work schedule',
-                onTap: () {
-                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(
-                      content: Text('Work schedule — в разработке'),
-                    ),
-                  );
-                },
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const WorkScheduleScreen()),
+                ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _ProfileGridCard(
                 title: 'Profile info',
-                onTap: () {
-                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(
-                      content: Text('Profile info — в разработке'),
-                    ),
-                  );
-                },
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                ),
               ),
             ),
           ],
@@ -352,6 +228,7 @@ class _ProfileGridCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
+          constraints: const BoxConstraints(minHeight: 96),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.backgroundPrimary,
@@ -368,6 +245,7 @@ class _ProfileGridCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (count != null) ...[
                 Row(

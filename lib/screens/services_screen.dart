@@ -765,6 +765,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             color: AppColors.textPrimary,
           ),
         ),
+        centerTitle: true,
         backgroundColor: AppColors.backgroundPrimary,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,

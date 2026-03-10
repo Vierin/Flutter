@@ -148,36 +148,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             color: AppColors.textPrimary,
           ),
         ),
-        centerTitle: false,
-        actions: [
-          IconButton(
-            onPressed: () {
-              ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                const SnackBar(
-                  content: Text('Информация о клиентах — в разработке'),
-                ),
-              );
-            },
-            icon: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppColors.neutral200,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Text(
-                  'i',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        centerTitle: true,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -208,7 +179,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
                 _FilterChip(
@@ -269,7 +240,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     itemCount: clients.length,
                     itemBuilder: (context, i) {
                       final c = clients[i];

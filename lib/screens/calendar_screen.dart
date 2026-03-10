@@ -29,6 +29,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   bool _isLoading = false;
 
   DateTime _selectedDate = DateTime.now();
+  DateTime _displayWeekStart = DateTime.now(); // понедельник видимой недели для заголовка
   String? _selectedStaffId;
   bool _expandedView = false;
   late PageController _dayStripPageController;
@@ -53,17 +54,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   void initState() {
     super.initState();
+    _displayWeekStart = _mondayOfWeek(_selectedDate);
     _dayStripPageController = PageController(
       initialPage: _weekIndexForDate(_selectedDate),
       viewportFraction: 0.92,
     );
+    _dayStripPageController.addListener(_onDayStripPageChanged);
     _loadData();
   }
 
   @override
   void dispose() {
+    _dayStripPageController.removeListener(_onDayStripPageChanged);
     _dayStripPageController.dispose();
     super.dispose();
+  }
+
+  void _onDayStripPageChanged() {
+    if (!_dayStripPageController.position.hasContentDimensions) return;
+    final page = _dayStripPageController.page ?? _dayStripPageController.initialPage.toDouble();
+    final index = page.round().clamp(0, _dayStripTotalWeeks - 1);
+    final monday = _dateForWeekIndex(index);
+    if (_displayWeekStart.year != monday.year ||
+        _displayWeekStart.month != monday.month ||
+        _displayWeekStart.day != monday.day) {
+      if (mounted) setState(() => _displayWeekStart = monday);
+    }
   }
 
   static DateTime _mondayOfWeek(DateTime d) {
@@ -355,43 +371,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Future<void> _handleEditBooking(Booking booking) async {
     final token = context.read<AuthService>().accessToken;
-    if (token == null || _salon == null) return;
-    try {
-      final services = await ServicesApiService.getBySalon(token, _salon!.id);
-      if (!mounted) return;
-      if (services.isEmpty || _staffMembers.isEmpty) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Нужны услуги и сотрудники для редактирования'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-      await NewBookingModal.show(
-        context,
-        salonId: _salon!.id,
-        services: services,
-        staffMembers: _staffMembers,
-        accessToken: token,
-        onSaved: _loadData,
-        getAccessToken: () async {
-          await context.read<AuthService>().refreshSession();
-          return context.read<AuthService>().accessToken;
-        },
-        existingBooking: booking,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-      );
-    }
+    if (token == null) return;
+    await NewBookingModal.show(
+      context,
+      accessToken: token,
+      onSaved: _loadData,
+      getAccessToken: () async {
+        await context.read<AuthService>().refreshSession();
+        return context.read<AuthService>().accessToken;
+      },
+      existingBooking: booking,
+    );
   }
 
   Future<void> _onNewAppointment() async {
     final token = context.read<AuthService>().accessToken;
-    if (token == null || _salon == null) {
+    if (token == null) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         const SnackBar(
           content: Text('Нет доступа'),
@@ -400,34 +395,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       );
       return;
     }
-    if (_staffMembers.isEmpty) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Добавьте сотрудников'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    List<ServiceItem> services = [];
-    try {
-      services = await ServicesApiService.getBySalon(token, _salon!.id);
-    } catch (_) {}
-    if (!mounted) return;
-    if (services.isEmpty) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Добавьте услуги в салон'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
     await NewBookingModal.show(
       context,
-      salonId: _salon!.id,
-      services: services,
-      staffMembers: _staffMembers,
       accessToken: token,
       onSaved: _loadData,
       getAccessToken: () async {
@@ -581,8 +550,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
       );
     }
 
+    final displayDate = _expandedView ? _selectedDate : _displayWeekStart;
     final monthYear =
-        '${_monthNamesFull[_selectedDate.month - 1]} ${_selectedDate.year}';
+        '${_monthNamesFull[displayDate.month - 1]} ${displayDate.year}';
     return Scaffold(
       backgroundColor: AppColors.backgroundSecondary,
       body: SafeArea(
@@ -619,12 +589,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   label: 'Сегодня',
                                   selected: _isToday(_selectedDate),
                                   onTap: () {
-                                    setState(
-                                      () => _selectedDate = DateTime.now(),
-                                    );
-                                    final page = _weekIndexForDate(
-                                      DateTime.now(),
-                                    );
+                                    final now = DateTime.now();
+                                    setState(() {
+                                      _selectedDate = now;
+                                      _displayWeekStart = _mondayOfWeek(now);
+                                    });
+                                    final page = _weekIndexForDate(now);
                                     if (page >= 0 &&
                                         page < _dayStripTotalWeeks) {
                                       _dayStripPageController.animateToPage(
@@ -653,12 +623,36 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Date strip (7 days) or full month grid
-                      _expandedView ? _buildMonthGrid() : _buildDayStrip(),
-                      const SizedBox(height: 16),
-                      // Filter pills (staff) — без внешнего отступа, паддинг внутри списка
-                      _buildStaffPills(),
-                      const SizedBox(height: 16),
+                      // Date strip (7 days) or full month grid with background
+                      _expandedView
+                          ? Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundPrimary,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.borderPrimary),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 320),
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.all(12),
+                                  child: _buildMonthGrid(),
+                                ),
+                              ),
+                            )
+                          : _buildDayStrip(),
+                      if (!_expandedView) ...[
+                        const SizedBox(height: 16),
+                        _buildStaffPills(),
+                        const SizedBox(height: 16),
+                      ],
                     ],
                   ),
                 ),
@@ -749,7 +743,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       d.day,
                       count,
                       isSelected,
-                      () => setState(() => _selectedDate = d),
+                      () => setState(() {
+                        _selectedDate = d;
+                        _expandedView = false;
+                      }),
                     ),
                   ),
                 );

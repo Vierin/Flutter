@@ -276,7 +276,7 @@ class _AddressPickerModalState extends State<AddressPickerModal> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  height: 280,
+                  height: 400,
                   decoration: BoxDecoration(
                     color: AppColors.backgroundTertiary,
                     border: Border.all(color: AppColors.borderPrimary),
@@ -363,8 +363,9 @@ class _AddressPickerModalState extends State<AddressPickerModal> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                'Переместите маркер для уточнения позиции',
+                                'Нажмите на карту чтобы установить маркер в нужное место.',
                                 style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.95)),
+                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),

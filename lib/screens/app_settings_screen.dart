@@ -36,12 +36,17 @@ class AppSettingsScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        padding: const EdgeInsets.fromLTRB(0, 16, 0, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildQuickActions(context),
-            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 24),
             _buildListTile(
               icon: Icons.language,
               title: 'Сменить язык',
@@ -90,6 +95,9 @@ class AppSettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             _buildExitButton(context),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -146,6 +154,7 @@ class AppSettingsScreen extends StatelessWidget {
       height: 100,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: actions.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {

@@ -5,8 +5,6 @@ import '../../constants/colors.dart';
 import '../../models/booking.dart';
 import '../../services/auth_service.dart';
 import '../../services/dashboard_api_service.dart';
-import '../../services/services_api_service.dart';
-import '../../services/staff_api_service.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 
@@ -69,25 +67,8 @@ class _AllBookingsScreenState extends State<AllBookingsScreen> {
   Future<void> _handleEditBooking(Booking booking) async {
     final token = context.read<AuthService>().accessToken;
     if (token == null) return;
-    final salon = await DashboardApiService.getCurrentSalon(token);
-    if (salon == null || !mounted) return;
-    final services = await ServicesApiService.getBySalon(token, salon.id);
-    final staff = await StaffApiService.getBySalon(token, salon.id);
-    if (!mounted) return;
-    if (services.isEmpty || staff.isEmpty) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Нужны услуги и сотрудники'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
     await NewBookingModal.show(
       context,
-      salonId: salon.id,
-      services: services,
-      staffMembers: staff,
       accessToken: token,
       onSaved: _loadData,
       getAccessToken: () async {

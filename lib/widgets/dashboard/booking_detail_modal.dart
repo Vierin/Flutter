@@ -49,23 +49,26 @@ class _BookingDetailContent extends StatelessWidget {
       initialChildSize: 0.7,
       minChildSize: 0.5,
       maxChildSize: 0.9,
-      builder: (context, scrollController) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            // Header — на всю ширину
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              decoration: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: AppColors.borderPrimary),
+      builder: (context, scrollController) => SafeArea(
+        top: false,
+        bottom: false,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundPrimary,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: AppColors.borderPrimary),
+                  ),
                 ),
-              ),
-              child: Row(
+                child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
@@ -99,12 +102,11 @@ class _BookingDetailContent extends StatelessWidget {
                 ],
               ),
             ),
-            // Content — на всю ширину, минимальные боковые отступы
-            Expanded(
-              child: SingleChildScrollView(
-                controller: scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Column(
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                    padding: const EdgeInsets.fromLTRB(0, 20, 16, 12),
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Status
@@ -160,16 +162,15 @@ class _BookingDetailContent extends StatelessWidget {
                 ),
               ),
             ),
-            // Action Buttons — на всю ширину
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              decoration: const BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: AppColors.borderPrimary),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: AppColors.borderPrimary),
+                  ),
                 ),
-              ),
-              child: Column(
+                child: Column(
                 children: [
                   if (booking.status == BookingStatus.pending)
                     Row(
@@ -301,9 +302,10 @@ class _BookingDetailContent extends StatelessWidget {
                       ],
                     ),
                 ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -10,8 +10,6 @@ import '../../widgets/dashboard/upcoming_bookings_list.dart';
 import '../app_settings_screen.dart';
 import '../notifications_screen.dart';
 import '../salon_setup_screen.dart';
-import '../../services/services_api_service.dart';
-import '../../services/staff_api_service.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -146,39 +144,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _handleEditBooking(Booking booking) async {
     final token = context.read<AuthService>().accessToken;
     if (token == null || token.isEmpty) return;
-    if (_salon == null) return;
-    try {
-      final services = await ServicesApiService.getBySalon(token, _salon!.id);
-      final staffMembers = await StaffApiService.getBySalon(token, _salon!.id);
-      if (!mounted) return;
-      if (services.isEmpty || staffMembers.isEmpty) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Нужны услуги и сотрудники для редактирования'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-      await NewBookingModal.show(
-        context,
-        salonId: _salon!.id,
-        services: services,
-        staffMembers: staffMembers,
-        accessToken: token,
-        onSaved: _loadData,
-        getAccessToken: () async {
-          await context.read<AuthService>().refreshSession();
-          return context.read<AuthService>().accessToken;
-        },
-        existingBooking: booking,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-      );
-    }
+    await NewBookingModal.show(
+      context,
+      accessToken: token,
+      onSaved: _loadData,
+      getAccessToken: () async {
+        await context.read<AuthService>().refreshSession();
+        return context.read<AuthService>().accessToken;
+      },
+      existingBooking: booking,
+    );
   }
 
   Future<void> _handleRejectBooking(String bookingId) async {
