@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../constants/colors.dart';
 import '../../models/booking.dart';
+import '../../utils/currency_format.dart';
 
 class BookingDetailModal {
   static void show(
@@ -41,17 +42,6 @@ class _BookingDetailContent extends StatelessWidget {
     this.onConfirm,
     this.onReject,
   });
-
-  String _formatPrice(double price) {
-    if (price >= 1000000000) {
-      return '₫${(price / 1000000000).toStringAsFixed(1)}B';
-    } else if (price >= 1000000) {
-      return '₫${(price / 1000000).toStringAsFixed(1)}M';
-    } else if (price >= 1000) {
-      return '₫${(price / 1000).toStringAsFixed(1)}K';
-    }
-    return '₫${price.toStringAsFixed(0)}';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +130,7 @@ class _BookingDetailContent extends StatelessWidget {
                         if (booking.service?.duration != null)
                           'Duration: ${booking.service!.duration} minutes',
                         if (booking.service?.price != null && booking.service!.price != null)
-                          'Price: ${_formatPrice(booking.service!.price!)}',
+                          'Price: ${formatVnd(booking.service!.price!)}',
                       ],
                     ),
                     const SizedBox(height: 20),
@@ -253,7 +243,7 @@ class _BookingDetailContent extends StatelessWidget {
                               ),
                             ),
                             child: const Text(
-                              'Edit Booking',
+                              'Изменить',
                               style: TextStyle(
                                 color: AppColors.textInverse,
                                 fontSize: 14,
@@ -265,9 +255,31 @@ class _BookingDetailContent extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () {
-                              onCancel?.call(booking.id);
-                              Navigator.of(context).pop();
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Отменить запись?'),
+                                  content: const Text(
+                                    'Запись будет отменена. Клиент может получить уведомление.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: const Text('Нет'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                      child: const Text('Да, отменить'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                onCancel?.call(booking.id);
+                                if (context.mounted) Navigator.of(context).pop();
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.neutral500,
@@ -277,7 +289,7 @@ class _BookingDetailContent extends StatelessWidget {
                               ),
                             ),
                             child: const Text(
-                              'Cancel',
+                              'Отменить запись',
                               style: TextStyle(
                                 color: AppColors.textInverse,
                                 fontSize: 14,

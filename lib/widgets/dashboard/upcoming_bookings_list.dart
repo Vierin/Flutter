@@ -4,8 +4,10 @@ import '../../constants/colors.dart';
 import '../../models/booking.dart';
 
 class UpcomingBookingsList extends StatefulWidget {
+  final String title;
   final List<Booking> bookings;
   final bool loading;
+  final VoidCallback? onViewAll;
   final Function(Booking)? onEditBooking;
   final Function(String)? onCancelBooking;
   final Function(String)? onConfirmBooking;
@@ -14,8 +16,10 @@ class UpcomingBookingsList extends StatefulWidget {
 
   const UpcomingBookingsList({
     super.key,
+    this.title = 'Upcoming Bookings',
     required this.bookings,
     required this.loading,
+    this.onViewAll,
     this.onEditBooking,
     this.onCancelBooking,
     this.onConfirmBooking,
@@ -34,9 +38,15 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
 
   @override
   Widget build(BuildContext context) {
-    final totalPages = (widget.bookings.length / _itemsPerPage).ceil().clamp(0, _maxPages);
+    final totalPages = (widget.bookings.length / _itemsPerPage).ceil().clamp(
+      0,
+      _maxPages,
+    );
     final startIndex = _currentPage * _itemsPerPage;
-    final endIndex = (startIndex + _itemsPerPage).clamp(0, widget.bookings.length);
+    final endIndex = (startIndex + _itemsPerPage).clamp(
+      0,
+      widget.bookings.length,
+    );
     final currentBookings = widget.bookings.sublist(
       startIndex.clamp(0, widget.bookings.length),
       endIndex,
@@ -54,7 +64,8 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
               border: Border(
                 bottom: BorderSide(color: AppColors.borderPrimary),
@@ -62,20 +73,41 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
             ),
             child: widget.loading
                 ? Container(
-                    width: 150,
+                    width: double.infinity,
                     height: 18,
                     decoration: BoxDecoration(
                       color: AppColors.neutral200,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   )
-                : const Text(
-                    'Upcoming Bookings',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+                : Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      if (widget.onViewAll != null)
+                        IconButton(
+                          onPressed: widget.onViewAll,
+                          icon: const Icon(
+                            Icons.launch,
+                            size: 20,
+                            color: AppColors.primary500,
+                          ),
+                          tooltip: 'Все записи',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                        ),
+                    ],
                   ),
           ),
           // Content
@@ -89,9 +121,11 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
                   children: [
                     const Text('📅', style: TextStyle(fontSize: 20)),
                     const SizedBox(height: 8),
-                    const Text(
-                      'No upcoming bookings',
-                      style: TextStyle(
+                    Text(
+                      widget.title == 'Today bookings'
+                          ? 'Нет записей на сегодня'
+                          : 'No upcoming bookings',
+                      style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 14,
                       ),
@@ -106,7 +140,10 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
                 ...currentBookings.asMap().entries.map((entry) {
                   final index = entry.key;
                   final booking = entry.value;
-                  return _buildBookingItem(booking, index < currentBookings.length - 1);
+                  return _buildBookingItem(
+                    booking,
+                    index < currentBookings.length - 1,
+                  );
                 }),
                 // Pagination
                 if (totalPages > 1)
@@ -170,9 +207,7 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: showBorder
-            ? const Border(
-                bottom: BorderSide(color: AppColors.borderPrimary),
-              )
+            ? const Border(bottom: BorderSide(color: AppColors.borderPrimary))
             : null,
       ),
       child: Row(
@@ -230,9 +265,7 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           border: showBorder
-              ? const Border(
-                  bottom: BorderSide(color: AppColors.borderPrimary),
-                )
+              ? const Border(bottom: BorderSide(color: AppColors.borderPrimary))
               : null,
         ),
         child: Row(
@@ -273,7 +306,8 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
                       child: Row(
                         children: [
                           GestureDetector(
-                            onTap: () => widget.onConfirmBooking?.call(booking.id),
+                            onTap: () =>
+                                widget.onConfirmBooking?.call(booking.id),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -295,7 +329,8 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
                           ),
                           const SizedBox(width: 8),
                           GestureDetector(
-                            onTap: () => widget.onRejectBooking?.call(booking.id),
+                            onTap: () =>
+                                widget.onRejectBooking?.call(booking.id),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -378,5 +413,3 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
     );
   }
 }
-
-

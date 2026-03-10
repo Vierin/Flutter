@@ -260,6 +260,61 @@ class DashboardApiService {
     throw Exception(_errorMessageFromResponse(response));
   }
 
+  /// PUT /bookings/:id/cancel — отменить бронирование.
+  static Future<bool> cancelBooking(String accessToken, String bookingId) async {
+    final url = Uri.parse('$_baseUrl/bookings/$bookingId/cancel');
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'authorization': 'Bearer $accessToken',
+      },
+    );
+    if (kDebugMode) {
+      debugPrint('[DashboardAPI] PUT /bookings/$bookingId/cancel status=${response.statusCode}');
+    }
+    if (response.statusCode == 200) return true;
+    throw Exception(_errorMessageFromResponse(response));
+  }
+
+  /// PUT /bookings/:id — обновить бронирование (serviceId, staffId, time, notes, status).
+  static Future<Booking> updateBooking(
+    String accessToken,
+    String bookingId, {
+    String? serviceId,
+    String? staffId,
+    String? timeIso,
+    String? notes,
+    String? status,
+  }) async {
+    final url = Uri.parse('$_baseUrl/bookings/$bookingId');
+    final body = <String, dynamic>{};
+    if (serviceId != null && serviceId.isNotEmpty) body['serviceId'] = serviceId;
+    if (staffId != null && staffId.isNotEmpty) body['staffId'] = staffId;
+    if (timeIso != null && timeIso.isNotEmpty) body['time'] = timeIso;
+    if (notes != null) body['notes'] = notes;
+    if (status != null && status.isNotEmpty) body['status'] = status;
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'authorization': 'Bearer $accessToken',
+      },
+      body: json.encode(body),
+    );
+    if (kDebugMode) {
+      debugPrint('[DashboardAPI] PUT /bookings/$bookingId status=${response.statusCode}');
+    }
+    if (response.statusCode != 200) {
+      throw Exception(_errorMessageFromResponse(response));
+    }
+    final data = json.decode(response.body) as Map<String, dynamic>?;
+    if (data == null) throw Exception('Invalid response');
+    final booking = data['booking'];
+    if (booking is! Map<String, dynamic>) throw Exception('No booking in response');
+    return _bookingFromApi(Map<String, dynamic>.from(booking));
+  }
+
   /// Бекенд отдаёт time (ISO строка), фронт ожидает dateTime.
   static Booking _bookingFromApi(Map<String, dynamic> json) {
     final time = json['time'];

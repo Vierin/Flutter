@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../models/salon.dart';
+import '../../utils/currency_format.dart';
 import '../../models/service_item.dart';
 import '../../services/auth_service.dart';
 import '../../services/dashboard_api_service.dart';
@@ -85,13 +86,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
         );
       }
     }
-  }
-
-  String _formatPrice(double? price) {
-    if (price == null) return '—';
-    if (price >= 1000000) return '${(price / 1000000).toStringAsFixed(0)}M ₫';
-    if (price >= 1000) return '${(price / 1000).toStringAsFixed(0)}K ₫';
-    return '₫${price.toStringAsFixed(0)}';
   }
 
   String _formatDuration(int? minutes) {
@@ -631,7 +625,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Цена (₽)',
+                        'Цена (₫)',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -657,7 +651,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Только числа (например, 50000 для 50К ₽)',
+                        'Только числа (например, 50000 для 50k ₫)',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -757,6 +751,24 @@ class _ServicesScreenState extends State<ServicesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundSecondary,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+          color: AppColors.textPrimary,
+        ),
+        title: const Text(
+          'Услуги',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        backgroundColor: AppColors.backgroundPrimary,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 0,
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary500))
               : _salon == null
@@ -791,19 +803,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     slivers: [
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Услуги',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
                               Text(
                                 'Управляйте услугами и ценами вашего салона',
                                 style: TextStyle(
@@ -1017,7 +1020,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                 final item = _filteredAndSortedServices[index];
                                 return _ServiceCard(
                                   item: item,
-                                  formatPrice: _formatPrice,
+                                  formatPrice: formatVnd,
                                   formatDuration: _formatDuration,
                                   isActionLoading: _isActionLoading,
                                   onEdit: () => _openEditDialog(item),
@@ -1106,7 +1109,7 @@ class _ServiceCard extends StatelessWidget {
                       }).toList(),
                     ),
                   ],
-                  const Spacer(),
+                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

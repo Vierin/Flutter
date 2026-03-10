@@ -5,15 +5,13 @@ import '../../models/booking.dart';
 import '../../models/salon.dart';
 import '../../services/auth_service.dart';
 import '../../services/dashboard_api_service.dart';
-import '../../widgets/dashboard/stats_card.dart';
-import '../../widgets/dashboard/period_selector.dart';
-import '../../widgets/dashboard/pending_bookings_section.dart';
+import '../../widgets/dashboard/booking_detail_modal.dart';
 import '../../widgets/dashboard/upcoming_bookings_list.dart';
-import '../../models/service_item.dart';
-import '../../models/staff_member.dart';
+import '../app_settings_screen.dart';
+import '../notifications_screen.dart';
+import '../salon_setup_screen.dart';
 import '../../services/services_api_service.dart';
 import '../../services/staff_api_service.dart';
-import '../../widgets/dashboard/booking_detail_modal.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -24,7 +22,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  Period _selectedPeriod = Period.thirtyDays;
   Salon? _salon;
   List<Booking> _bookings = [];
   bool _isLoading = false;
@@ -105,10 +102,81 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+      final message = e is Exception
+          ? e.toString().replaceFirst('Exception: ', '')
+          : e.toString();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(
           content: Text(message.length > 80 ? 'Ошибка подтверждения' : message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleCancelBooking(String bookingId) async {
+    final token = context.read<AuthService>().accessToken;
+    if (token == null || token.isEmpty) return;
+    try {
+      final ok = await DashboardApiService.cancelBooking(token, bookingId);
+      if (!mounted) return;
+      if (ok) {
+        await _loadData();
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          const SnackBar(
+            content: Text('Запись отменена'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final message =
+          e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(message.length > 80 ? 'Ошибка отмены' : message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleEditBooking(Booking booking) async {
+    final token = context.read<AuthService>().accessToken;
+    if (token == null || token.isEmpty) return;
+    if (_salon == null) return;
+    try {
+      final services = await ServicesApiService.getBySalon(token, _salon!.id);
+      final staffMembers = await StaffApiService.getBySalon(token, _salon!.id);
+      if (!mounted) return;
+      if (services.isEmpty || staffMembers.isEmpty) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          const SnackBar(
+            content: Text('Нужны услуги и сотрудники для редактирования'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+      await NewBookingModal.show(
+        context,
+        salonId: _salon!.id,
+        services: services,
+        staffMembers: staffMembers,
+        accessToken: token,
+        onSaved: _loadData,
+        getAccessToken: () async {
+          await context.read<AuthService>().refreshSession();
+          return context.read<AuthService>().accessToken;
+        },
+        existingBooking: booking,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text('Ошибка: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -139,7 +207,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+      final message = e is Exception
+          ? e.toString().replaceFirst('Exception: ', '')
+          : e.toString();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(
           content: Text(message.length > 80 ? 'Ошибка отклонения' : message),
@@ -149,133 +219,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> _openNewBookingModal() async {
-    final token = context.read<AuthService>().accessToken;
-    if (token == null || _salon == null) return;
-    List<ServiceItem> services = [];
-    List<StaffMember> staffMembers = [];
-    try {
-      services = await ServicesApiService.getBySalon(token, _salon!.id);
-      staffMembers = await StaffApiService.getBySalon(token, _salon!.id);
-    } catch (_) {}
-    if (!mounted) return;
-    if (services.isEmpty) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Добавьте услуги в салон'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    if (staffMembers.isEmpty) {
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Добавьте сотрудников'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-    await NewBookingModal.show(
-      context,
-      salonId: _salon!.id,
-      services: services,
-      staffMembers: staffMembers,
-      accessToken: token,
-      onSaved: _loadData,
-      getAccessToken: () async {
-        await context.read<AuthService>().refreshSession();
-        return context.read<AuthService>().accessToken;
-      },
-    );
-  }
-
-  String _formatVND(double amount) {
-    if (amount >= 1000000000) {
-      return '₫${(amount / 1000000000).toStringAsFixed(1)}B';
-    } else if (amount >= 1000000) {
-      return '₫${(amount / 1000000).toStringAsFixed(1)}M';
-    } else if (amount >= 1000) {
-      return '₫${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return '₫${amount.toStringAsFixed(0)}';
-  }
-
-  Map<String, dynamic> _calculateStats() {
+  List<Booking> _getTodayBookings() {
     final now = DateTime.now();
-    DateTime startDate;
-
-    switch (_selectedPeriod) {
-      case Period.sevenDays:
-        startDate = now.subtract(const Duration(days: 7));
-        break;
-      case Period.thirtyDays:
-        startDate = now.subtract(const Duration(days: 30));
-        break;
-      case Period.oneYear:
-        startDate = now.subtract(const Duration(days: 365));
-        break;
-    }
-
-    final periodBookings = _bookings.where((booking) {
-      return booking.dateTime.isAfter(startDate) &&
-          booking.dateTime.isBefore(now) ||
-          booking.dateTime.isAtSameMomentAs(startDate) ||
-          booking.dateTime.isAtSameMomentAs(now);
-    }).toList();
-
-    final revenue = periodBookings
-        .where((b) => b.status == BookingStatus.completed)
-        .fold<double>(
-          0,
-          (sum, booking) => sum + (booking.service?.price ?? 0),
-        );
-
-    final uniqueClients = periodBookings
-        .map((b) => b.user?.email ?? b.user?.name ?? '')
-        .where((email) => email.isNotEmpty)
-        .toSet()
-        .length;
-
-    final completedCount = periodBookings
-        .where((b) => b.status == BookingStatus.completed)
-        .length;
-
-    final completionRate = periodBookings.isEmpty
-        ? 0
-        : ((completedCount / periodBookings.length) * 100).round();
-
-    return {
-      'revenue': revenue,
-      'clients': uniqueClients,
-      'bookings': periodBookings.length,
-      'completionRate': completionRate,
-    };
-  }
-
-  List<Booking> _getUpcomingBookings() {
-    final now = DateTime.now();
-    final sevenDaysFromNow = now.add(const Duration(days: 7));
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final todayEnd = todayStart.add(const Duration(days: 1));
 
     return _bookings.where((booking) {
-      return booking.dateTime.isAfter(now) &&
-          booking.dateTime.isBefore(sevenDaysFromNow) &&
-          booking.status == BookingStatus.confirmed;
-    }).toList();
-  }
-
-  List<Booking> _getPendingBookings() {
-    return _bookings
-        .where((booking) => booking.status == BookingStatus.pending)
-        .toList();
+      return !booking.dateTime.isBefore(todayStart) &&
+          booking.dateTime.isBefore(todayEnd) &&
+          booking.status != BookingStatus.canceled;
+    }).toList()..sort((a, b) => a.dateTime.compareTo(b.dateTime));
   }
 
   @override
   Widget build(BuildContext context) {
-    final stats = _calculateStats();
-    final upcomingBookings = _getUpcomingBookings();
-    final pendingBookings = _getPendingBookings();
+    final todayBookings = _getTodayBookings();
 
     return Scaffold(
       backgroundColor: AppColors.backgroundSecondary,
@@ -293,198 +251,112 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
-                        'Dashboard',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                      Expanded(
+                        child: Text(
+                          _salon?.name ?? 'Мой салон',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                      const SizedBox(width: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        alignment: WrapAlignment.end,
                         children: [
-                          ElevatedButton(
-                        onPressed: _salon == null ? null : () => _openNewBookingModal(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary500,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+                          if (_salon != null)
+                            _buildHeaderPill(
+                              icon: Icons.star_rounded,
+                              label: '—',
+                              onTap: null,
+                            ),
+                          _buildHeaderIconPill(
+                            icon: Icons.notifications_outlined,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const NotificationsScreen(),
+                              ),
+                            ),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          _buildHeaderIconPill(
+                            icon: Icons.settings_outlined,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AppSettingsScreen(),
+                              ),
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          'New Booking',
-                          style: TextStyle(
-                            color: AppColors.textInverse,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
                         ],
                       ),
                     ],
                   ),
                 ),
-                // Period Selector
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: PeriodSelector(
-                    value: _selectedPeriod,
-                    onValueChange: (period) {
-                      setState(() => _selectedPeriod = period);
-                    },
+                const SizedBox(height: 16),
+                // Link cards: Клиенты, Online booking
+                if (!_isLoading && _salon != null) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildLinkCard(
+                            title: 'Клиенты',
+                            icon: Icons.people_outline,
+                            color: AppColors.primary100,
+                            onTap: () => Navigator.of(context).pushNamed('/clients'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildLinkCard(
+                            title: 'Online booking',
+                            icon: Icons.calendar_month_outlined,
+                            color: AppColors.secondary100,
+                            onTap: () => Navigator.of(context).pushNamed('/online-booking'),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                // Loader while fetching salon/data, then Setup Card or Stats
+                  const SizedBox(height: 24),
+                ],
                 if (_isLoading)
                   _buildLoadingCard()
                 else if (_salon == null)
                   _buildSetupCard()
                 else
-                  Column(
-                    children: [
-                      // Stats Cards
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: _isLoading
-                            ? _buildStatsSkeleton()
-                            : Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: StatsCard(
-                                          title: 'Total Revenue',
-                                          value: _formatVND(stats['revenue']),
-                                          icon: const Icon(
-                                            Icons.attach_money,
-                                            size: 18,
-                                            color: AppColors.primary500,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: StatsCard(
-                                          title: 'Total Clients',
-                                          value: stats['clients'].toString(),
-                                          icon: const Icon(
-                                            Icons.people,
-                                            size: 18,
-                                            color: AppColors.primary500,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: StatsCard(
-                                          title: 'Bookings',
-                                          value: stats['bookings'].toString(),
-                                          icon: const Icon(
-                                            Icons.calendar_today,
-                                            size: 18,
-                                            color: AppColors.primary500,
-                                          ),
-                                          subtitle: _selectedPeriod ==
-                                                  Period.sevenDays
-                                              ? 'Last 7 Days'
-                                              : _selectedPeriod == Period.thirtyDays
-                                                  ? 'Last 30 Days'
-                                                  : 'Last 1 Year',
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: StatsCard(
-                                          title: 'Completion Rate',
-                                          value: '${stats['completionRate']}%',
-                                          icon: const Icon(
-                                            Icons.trending_up,
-                                            size: 18,
-                                            color: AppColors.primary500,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Pending Bookings Section
-                      if (pendingBookings.isNotEmpty || _isLoading)
-                        PendingBookingsSection(
-                          bookings: pendingBookings,
-                          loading: _isLoading,
-                          count: pendingBookings.length,
-                          onBookingPress: (booking) {
-                            BookingDetailModal.show(
-                              context,
-                              booking: booking,
-                              onEdit: (b) {
-                                // TODO: Handle edit
-                                print('Edit booking: ${b.id}');
-                              },
-                              onCancel: (bookingId) {
-                                // TODO: Handle cancel
-                                print('Cancel booking: $bookingId');
-                              },
-                              onConfirm: _handleConfirmBooking,
-                              onReject: _handleRejectBooking,
-                            );
-                          },
-                          onConfirmBooking: _handleConfirmBooking,
-                          onRejectBooking: _handleRejectBooking,
-                        ),
-                      const SizedBox(height: 24),
-                      // Upcoming Bookings
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: UpcomingBookingsList(
-                          bookings: upcomingBookings,
-                          loading: _isLoading,
-                          onEditBooking: (booking) {
-                            // TODO: Handle edit booking
-                            print('Edit booking: ${booking.id}');
-                          },
-                          onCancelBooking: (bookingId) {
-                            // TODO: Handle cancel booking
-                            print('Cancel booking: $bookingId');
-                          },
-                          onConfirmBooking: _handleConfirmBooking,
-                          onRejectBooking: _handleRejectBooking,
-                          onBookingPress: (booking) {
-                            BookingDetailModal.show(
-                              context,
-                              booking: booking,
-                              onEdit: (b) {
-                                // TODO: Handle edit
-                                print('Edit booking: ${b.id}');
-                              },
-                              onCancel: (bookingId) {
-                                // TODO: Handle cancel
-                                print('Cancel booking: $bookingId');
-                              },
-                              onConfirm: _handleConfirmBooking,
-                              onReject: _handleRejectBooking,
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: UpcomingBookingsList(
+                      title: 'Today bookings',
+                      bookings: todayBookings,
+                      loading: _isLoading,
+                      onViewAll: () => Navigator.of(context).pushNamed('/all-bookings'),
+                      onEditBooking: _handleEditBooking,
+                      onCancelBooking: _handleCancelBooking,
+                      onConfirmBooking: _handleConfirmBooking,
+                      onRejectBooking: _handleRejectBooking,
+                      onBookingPress: (booking) {
+                        BookingDetailModal.show(
+                          context,
+                          booking: booking,
+                          onEdit: _handleEditBooking,
+                          onCancel: _handleCancelBooking,
+                          onConfirm: _handleConfirmBooking,
+                          onReject: _handleRejectBooking,
+                        );
+                      },
+                    ),
                   ),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -505,10 +377,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
             Text(
               'Загрузка данных салона...',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -544,23 +413,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 8),
           const Text(
             'Please complete your salon setup to start using the dashboard.',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Navigate to setup screen
-            },
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SalonSetupScreen(
+                  onSaved: () {
+                    Navigator.pop(context);
+                    _loadData();
+                  },
+                ),
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary500,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -579,26 +450,113 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildStatsSkeleton() {
-    return Column(
-      children: [
-        Row(
-          children: const [
-            Expanded(child: StatsCardSkeleton()),
-            SizedBox(width: 12),
-            Expanded(child: StatsCardSkeleton()),
-          ],
+  Widget _buildLinkCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderPrimary),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 32, color: AppColors.primary500),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: const [
-            Expanded(child: StatsCardSkeleton()),
-            SizedBox(width: 12),
-            Expanded(child: StatsCardSkeleton()),
-          ],
-        ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderPill({
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    final child = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundPrimary,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderPrimary),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: AppColors.warning500),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: child,
+      );
+    }
+    return child;
+  }
+
+  Widget _buildHeaderIconPill({required IconData icon, VoidCallback? onTap}) {
+    final child = Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundPrimary,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderPrimary),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Icon(icon, size: 20, color: AppColors.textPrimary),
+    );
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: child,
     );
   }
 }
-

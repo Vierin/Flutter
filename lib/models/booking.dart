@@ -6,6 +6,7 @@ class Booking {
   final User? user;
   final Staff? staff;
   final String? staffId;
+  final String? serviceId;
   final String? notes;
 
   Booking({
@@ -16,6 +17,7 @@ class Booking {
     this.user,
     this.staff,
     this.staffId,
+    this.serviceId,
     this.notes,
   });
 
@@ -25,6 +27,8 @@ class Booking {
   factory Booking.fromJson(Map<String, dynamic> json) {
     final staffIdRaw = json['staffId'];
     final staffId = staffIdRaw != null ? staffIdRaw.toString() : null;
+    final serviceIdRaw = json['serviceId'];
+    final serviceId = serviceIdRaw != null ? serviceIdRaw.toString() : null;
     return Booking(
       id: json['id'] as String,
       dateTime: DateTime.parse(json['dateTime'] as String),
@@ -39,6 +43,7 @@ class Booking {
           ? Staff.fromJson(json['staff'] as Map<String, dynamic>)
           : null,
       staffId: staffId,
+      serviceId: serviceId,
       notes: json['notes'] as String?,
     );
   }
@@ -51,6 +56,7 @@ class Booking {
       'service': service?.toJson(),
       'user': user?.toJson(),
       'staff': staff?.toJson(),
+      'serviceId': serviceId,
       'notes': notes,
     };
   }

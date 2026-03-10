@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
+import '../../models/salon.dart';
+import '../../models/service_item.dart';
+import '../../models/staff_member.dart';
+import '../../services/auth_service.dart';
+import '../../services/dashboard_api_service.dart';
+import '../../services/services_api_service.dart';
+import '../../services/staff_api_service.dart';
+import '../../widgets/dashboard/new_booking_modal.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'calendar_screen.dart';
-import 'staff_screen.dart';
+import 'analytics_screen.dart';
+import 'profile_screen.dart';
 import 'services_screen.dart';
-import 'settings_screen.dart';
+import 'staff_screen.dart';
+import 'clients_screen.dart';
+import 'online_booking_screen.dart';
+import 'all_bookings_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -15,77 +28,177 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  final GlobalKey<NavigatorState> _homeNavigatorKey = GlobalKey<NavigatorState>();
 
-  static const List<Widget> _screens = [
-    DashboardScreen(),
+  Widget _buildHomeNavigator() {
+    return Navigator(
+      key: _homeNavigatorKey,
+      initialRoute: '/',
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/':
+            return MaterialPageRoute(builder: (_) => const DashboardScreen());
+          case '/services':
+            return MaterialPageRoute(builder: (_) => const ServicesScreen());
+          case '/staff':
+            return MaterialPageRoute(builder: (_) => const StaffScreen());
+          case '/clients':
+            return MaterialPageRoute(builder: (_) => const ClientsScreen());
+          case '/online-booking':
+            return MaterialPageRoute(builder: (_) => const OnlineBookingScreen());
+          case '/all-bookings':
+            return MaterialPageRoute(builder: (_) => const AllBookingsScreen());
+          default:
+            return MaterialPageRoute(builder: (_) => const DashboardScreen());
+        }
+      },
+    );
+  }
+
+  List<Widget> get _screens => [
+    _buildHomeNavigator(),
     CalendarScreen(),
-    StaffScreen(),
-    ServicesScreen(),
-    SettingsScreen(),
+    AnalyticsScreen(),
+    const ProfileScreen(),
   ];
+
+  Future<void> _openNewBooking() async {
+    final token = context.read<AuthService>().accessToken;
+    if (token == null || token.isEmpty) return;
+    Salon? salon;
+    try {
+      salon = await DashboardApiService.getCurrentSalon(token);
+    } catch (_) {}
+    if (!mounted) return;
+    if (salon == null) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(
+          content: Text('Загрузите данные салона'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    List<ServiceItem> services = [];
+    List<StaffMember> staffMembers = [];
+    try {
+      services = await ServicesApiService.getBySalon(token, salon.id);
+      staffMembers = await StaffApiService.getBySalon(token, salon.id);
+    } catch (_) {}
+    if (!mounted) return;
+    if (services.isEmpty) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(
+          content: Text('Добавьте услуги в салон'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    if (staffMembers.isEmpty) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(
+          content: Text('Добавьте сотрудников'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    await NewBookingModal.show(
+      context,
+      salonId: salon.id,
+      services: services,
+      staffMembers: staffMembers,
+      accessToken: token,
+      onSaved: () {},
+      getAccessToken: () async {
+        await context.read<AuthService>().refreshSession();
+        return context.read<AuthService>().accessToken;
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.backgroundPrimary,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(child: _NavItem(
+      body: IndexedStack(index: _currentIndex, children: _screens),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.backgroundPrimary,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          constraints: const BoxConstraints(minHeight: 48, maxHeight: 64),
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: _NavItem(
                   icon: Icons.dashboard_outlined,
                   activeIcon: Icons.dashboard,
                   label: 'Дашборд',
                   isSelected: _currentIndex == 0,
                   onTap: () => setState(() => _currentIndex = 0),
-                )),
-                Expanded(child: _NavItem(
+                ),
+              ),
+              Expanded(
+                child: _NavItem(
                   icon: Icons.calendar_today_outlined,
                   activeIcon: Icons.calendar_today,
                   label: 'Календарь',
                   isSelected: _currentIndex == 1,
                   onTap: () => setState(() => _currentIndex = 1),
-                )),
-                Expanded(child: _NavItem(
-                  icon: Icons.people_outline,
-                  activeIcon: Icons.people,
-                  label: 'Персонал',
+                ),
+              ),
+              Expanded(child: _PlusButton(onTap: _openNewBooking)),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.analytics_outlined,
+                  activeIcon: Icons.analytics,
+                  label: 'Аналитика',
                   isSelected: _currentIndex == 2,
                   onTap: () => setState(() => _currentIndex = 2),
-                )),
-                Expanded(child: _NavItem(
-                  icon: Icons.spa_outlined,
-                  activeIcon: Icons.spa,
-                  label: 'Сервисы',
+                ),
+              ),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.person_outline,
+                  activeIcon: Icons.person,
+                  label: 'Профиль',
                   isSelected: _currentIndex == 3,
                   onTap: () => setState(() => _currentIndex = 3),
-                )),
-                Expanded(child: _NavItem(
-                  icon: Icons.settings_outlined,
-                  activeIcon: Icons.settings,
-                  label: 'Настройки',
-                  isSelected: _currentIndex == 4,
-                  onTap: () => setState(() => _currentIndex = 4),
-                )),
-              ],
-            ),
+                ),
+              ),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlusButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _PlusButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+        child: Center(
+          child: Icon(Icons.add_circle, size: 28, color: AppColors.primary500),
         ),
       ),
     );
@@ -119,12 +232,12 @@ class _NavItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(isSelected ? activeIcon : icon, size: 22, color: color),
-            const SizedBox(height: 2),
+            Icon(isSelected ? activeIcon : icon, size: 20, color: color),
+            const SizedBox(height: 1),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: color,
               ),

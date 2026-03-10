@@ -7,6 +7,7 @@ import 'config/app_config.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'services/auth_service.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,10 +32,9 @@ class MyApp extends StatelessWidget {
       create: (_) => AuthService(),
       child: MaterialApp(
         title: 'Henzo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.light,
+        darkTheme: AppTheme.light,
+        themeMode: ThemeMode.light,
         home: const AuthWrapper(),
       ),
     );

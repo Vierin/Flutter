@@ -1,10 +1,26 @@
+import 'package:dropdown_flutter/custom_dropdown.dart';
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
+import '../../models/booking.dart';
+import '../../utils/currency_format.dart';
 import '../../models/service_item.dart';
 import '../../models/staff_member.dart';
 import '../../services/dashboard_api_service.dart';
 
-/// Модалка добавления новой резервации (2 шага, как на скриншоте).
+/// Обёртка для ServiceItem с поддержкой поиска в DropdownFlutter.
+class _ServiceItemOption with CustomDropdownListFilter {
+  _ServiceItemOption(this.service);
+  final ServiceItem service;
+
+  @override
+  String toString() => service.displayName;
+
+  @override
+  bool filter(String query) =>
+      service.displayName.toLowerCase().contains(query.toLowerCase());
+}
+
+/// Модалка добавления или редактирования резервации (2 шага).
 class NewBookingModal extends StatefulWidget {
   const NewBookingModal({
     super.key,
@@ -14,6 +30,7 @@ class NewBookingModal extends StatefulWidget {
     required this.accessToken,
     required this.onSaved,
     this.getAccessToken,
+    this.existingBooking,
   });
 
   final String salonId;
@@ -23,6 +40,10 @@ class NewBookingModal extends StatefulWidget {
   final VoidCallback onSaved;
   /// Если задан, перед отправкой вызывается для получения свежего токена (обход истёкшего).
   final Future<String?> Function()? getAccessToken;
+  /// Если задан — режим редактирования (предзаполнение, submit = PUT).
+  final Booking? existingBooking;
+
+  bool get isEditMode => existingBooking != null;
 
   static Future<void> show(
     BuildContext context, {
@@ -32,6 +53,7 @@ class NewBookingModal extends StatefulWidget {
     required String accessToken,
     required VoidCallback onSaved,
     Future<String?> Function()? getAccessToken,
+    Booking? existingBooking,
   }) {
     return Navigator.of(context).push<void>(
       MaterialPageRoute(
@@ -43,6 +65,7 @@ class NewBookingModal extends StatefulWidget {
           accessToken: accessToken,
           onSaved: onSaved,
           getAccessToken: getAccessToken,
+          existingBooking: existingBooking,
         ),
       ),
     );
@@ -54,7 +77,6 @@ class NewBookingModal extends StatefulWidget {
 
 class _NewBookingModalState extends State<NewBookingModal> {
   int _step = 1;
-  final _serviceSearchController = TextEditingController();
   ServiceItem? _selectedService;
   StaffMember? _selectedStaff;
   DateTime _selectedDate = DateTime.now();
@@ -76,24 +98,41 @@ class _NewBookingModalState extends State<NewBookingModal> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final existing = widget.existingBooking;
+    if (existing != null) {
+      _selectedDate = DateTime(existing.dateTime.year, existing.dateTime.month, existing.dateTime.day);
+      _selectedHour = existing.dateTime.hour;
+      _selectedMinute = existing.dateTime.minute;
+      if (existing.serviceId != null) {
+        final match = widget.services.where((s) => s.id == existing.serviceId).toList();
+        if (match.isNotEmpty) _selectedService = match.first;
+      }
+      if (_selectedService == null && existing.service != null) {
+        final byName = widget.services.where((s) => s.name == existing.service!.name).toList();
+        if (byName.isNotEmpty) _selectedService = byName.first;
+      }
+      if (existing.effectiveStaffId != null) {
+        final sm = widget.staffMembers.where((s) => s.id == existing.effectiveStaffId).toList();
+        if (sm.isNotEmpty) _selectedStaff = sm.first;
+      }
+      if (existing.user != null) {
+        _nameController.text = existing.user!.name ?? '';
+        _emailController.text = existing.user!.email ?? '';
+        _phoneController.text = existing.user!.phone ?? '';
+      }
+      _notesController.text = existing.notes ?? '';
+    } else {
+      _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    }
   }
 
   @override
   void dispose() {
-    _serviceSearchController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _notesController.dispose();
     super.dispose();
-  }
-
-  String _formatPrice(double? price) {
-    if (price == null) return '—';
-    if (price >= 1000000) return '${(price / 1000000).toStringAsFixed(0)}M ₫';
-    if (price >= 1000) return '${(price / 1000).toStringAsFixed(0)}K ₫';
-    return '₫${price.toStringAsFixed(0)}';
   }
 
   String _dayLabel(DateTime d) {
@@ -140,6 +179,7 @@ class _NewBookingModalState extends State<NewBookingModal> {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
+    final notes = _notesController.text.trim().isEmpty ? null : _notesController.text.trim();
     setState(() => _isSubmitting = true);
     try {
       final token = widget.getAccessToken != null
@@ -163,22 +203,37 @@ class _NewBookingModalState extends State<NewBookingModal> {
         _selectedHour,
         _selectedMinute,
       );
-      await DashboardApiService.createBooking(
-        token,
-        salonId: widget.salonId,
-        serviceId: _selectedService!.id,
-        timeIso: dateTime.toUtc().toIso8601String(),
-        staffId: _selectedStaff?.id,
-        clientName: name.isEmpty ? null : name,
-        clientPhone: phone.isEmpty ? null : phone,
-        clientEmail: email.isEmpty ? null : email,
-        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-      );
+      final timeIso = dateTime.toUtc().toIso8601String();
+      if (widget.existingBooking != null) {
+        await DashboardApiService.updateBooking(
+          token,
+          widget.existingBooking!.id,
+          serviceId: _selectedService!.id,
+          staffId: _selectedStaff?.id,
+          timeIso: timeIso,
+          notes: notes,
+        );
+      } else {
+        await DashboardApiService.createBooking(
+          token,
+          salonId: widget.salonId,
+          serviceId: _selectedService!.id,
+          timeIso: timeIso,
+          staffId: _selectedStaff?.id,
+          clientName: name.isEmpty ? null : name,
+          clientPhone: phone.isEmpty ? null : phone,
+          clientEmail: email.isEmpty ? null : email,
+          notes: notes,
+        );
+      }
       if (!mounted) return;
       widget.onSaved();
       Navigator.of(context).pop();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(content: Text('Резервация создана'), backgroundColor: Colors.green),
+        SnackBar(
+          content: Text(widget.isEditMode ? 'Запись изменена' : 'Резервация создана'),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -218,21 +273,9 @@ class _NewBookingModalState extends State<NewBookingModal> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: AppColors.primary500,
-                child: const Text('1', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-              ),
-              Container(width: 24, height: 2, color: _step >= 2 ? AppColors.primary500 : AppColors.borderPrimary),
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: _step >= 2 ? AppColors.primary500 : AppColors.borderPrimary,
-                child: Text('2', style: TextStyle(color: _step >= 2 ? Colors.white : AppColors.textSecondary, fontSize: 14, fontWeight: FontWeight.w600)),
-              ),
-            ],
+          Text(
+            widget.isEditMode ? 'Изменить запись' : 'Новая запись',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
           ),
           Positioned(
             right: 0,
@@ -247,90 +290,63 @@ class _NewBookingModalState extends State<NewBookingModal> {
   }
 
   Widget _buildStep1() {
+    final serviceOptions = widget.services.map((s) => _ServiceItemOption(s)).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: () {
-            _serviceSearchController.clear();
-            showModalBottomSheet<void>(
-              context: context,
-              builder: (ctx) => SafeArea(
+        DropdownFlutter<_ServiceItemOption>.search(
+          hintText: 'Выберите услугу',
+          searchHintText: 'Поиск по названию услуги',
+          items: serviceOptions,
+          initialItem: _selectedService != null ? _ServiceItemOption(_selectedService!) : null,
+          onChanged: (value) {
+            setState(() => _selectedService = value?.service);
+          },
+          hintBuilder: (context, hint, enabled) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Text(
+              hint,
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            ),
+          ),
+          headerBuilder: (context, selectedItem, enabled) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Text(
+              selectedItem.service.displayName,
+              style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+            ),
+          ),
+          listItemBuilder: (context, item, isSelected, onItemSelect) {
+            final s = item.service;
+            return InkWell(
+              onTap: onItemSelect,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text('Выберите услугу', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    Text(
+                      s.displayName,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _serviceSearchController,
-                        decoration: InputDecoration(
-                          hintText: 'Поиск по названию услуги',
-                          prefixIcon: const Icon(Icons.search, size: 22, color: AppColors.textSecondary),
-                          filled: true,
-                          fillColor: AppColors.backgroundSecondary,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Flexible(
-                      child: ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: _serviceSearchController,
-                        builder: (_, value, __) {
-                          final list = value.text.trim().isEmpty
-                              ? widget.services
-                              : widget.services
-                                  .where((s) => s.displayName.toLowerCase().contains(value.text.trim().toLowerCase()))
-                                  .toList();
-                          return ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: list.length,
-                            itemBuilder: (ctx, i) {
-                              final s = list[i];
-                              return ListTile(
-                                title: Text(s.displayName),
-                                subtitle: Text('${s.duration ?? 0} мин · ${_formatPrice(s.price)}'),
-                                onTap: () {
-                                  setState(() => _selectedService = s);
-                                  Navigator.pop(ctx);
-                                },
-                              );
-                            },
-                          );
-                        },
-                      ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${s.duration ?? 0} мин · ${formatVnd(s.price)}',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
               ),
             );
           },
-          borderRadius: BorderRadius.circular(12),
-          child: InputDecorator(
-            decoration: InputDecoration(
-              hintText: 'Услуга',
-              prefixIcon: const Icon(Icons.search, size: 22, color: AppColors.textSecondary),
-              suffixIcon: _selectedService != null
-                  ? IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      onPressed: () => setState(() => _selectedService = null),
-                    )
-                  : null,
-              filled: true,
-              fillColor: AppColors.backgroundSecondary,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.borderPrimary)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            ),
-            child: Text(
-              _selectedService?.displayName ?? '',
-              style: TextStyle(fontSize: 14, color: _selectedService != null ? AppColors.textPrimary : AppColors.textSecondary),
-            ),
+          decoration: CustomDropdownDecoration(
+            closedFillColor: AppColors.backgroundSecondary,
+            closedBorder: Border.all(color: AppColors.borderPrimary),
+            closedBorderRadius: BorderRadius.circular(12),
+            hintStyle: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            headerStyle: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+            prefixIcon: const Icon(Icons.search, size: 22, color: AppColors.textSecondary),
           ),
         ),
         if (_selectedService != null) ...[
@@ -341,7 +357,7 @@ class _NewBookingModalState extends State<NewBookingModal> {
               const SizedBox(width: 6),
               Text('${_selectedService!.duration ?? 0} мин', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
               const SizedBox(width: 16),
-              Text(_formatPrice(_selectedService!.price), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary500)),
+              Text(formatVnd(_selectedService!.price), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary500)),
             ],
           ),
         ],
@@ -708,7 +724,7 @@ class _NewBookingModalState extends State<NewBookingModal> {
               ),
               child: _isSubmitting
                   ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Записаться'),
+                  : Text(widget.isEditMode ? 'Сохранить' : 'Записаться'),
             ),
           ),
         ],

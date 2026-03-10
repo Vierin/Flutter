@@ -15,6 +15,10 @@ abstract final class AppConfig {
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
   }
 
+  /// URL веб-приложения для ссылки на онлайн-запись (без завершающего слэша).
+  static String get webUrl =>
+      (dotenv.env['EXPO_PUBLIC_WEB_URL'] ?? 'https://henzo.app').trim().replaceAll(RegExp(r'/$'), '');
+
   /// Web Client ID из Google Cloud (тот же, что в Supabase → Auth → Google).
   static String get googleWebClientId =>
       (dotenv.env['EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID'] ?? '').trim();

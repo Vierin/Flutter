@@ -11,6 +11,7 @@ class Salon {
   final Map<String, dynamic>? workingHours;
   final Map<String, dynamic>? reminderSettings;
   final String? slug;
+  final bool? autoConfirmBookings;
   final double? latitude;
   final double? longitude;
 
@@ -27,6 +28,7 @@ class Salon {
     this.workingHours,
     this.reminderSettings,
     this.slug,
+    this.autoConfirmBookings,
     this.latitude,
     this.longitude,
   });
@@ -68,6 +70,7 @@ class Salon {
       workingHours: wh,
       reminderSettings: rs,
       slug: json['slug'] as String?,
+      autoConfirmBookings: json['autoConfirmBookings'] as bool?,
       latitude: lat,
       longitude: lon,
     );
@@ -87,6 +90,7 @@ class Salon {
       'workingHours': workingHours,
       'reminderSettings': reminderSettings,
       'slug': slug,
+      'autoConfirmBookings': autoConfirmBookings,
       'latitude': latitude,
       'longitude': longitude,
     };
@@ -96,6 +100,7 @@ class Salon {
   Map<String, dynamic> toUpdatePayload() {
     return {
       if (name != null) 'name': name,
+      if (autoConfirmBookings != null) 'autoConfirmBookings': autoConfirmBookings,
       if (description != null) 'description': description,
       if (address != null) 'address': address,
       if (phone != null) 'phone': phone,
