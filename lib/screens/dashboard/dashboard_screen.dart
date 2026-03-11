@@ -19,6 +19,66 @@ import '../notifications_screen.dart';
 import '../salon_setup_screen.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 
+enum BookingAction {
+  confirm,
+  cancel,
+  reject;
+
+  Future<bool> apiCall(String token, String bookingId) {
+    switch (this) {
+      case confirm:
+        return DashboardApiService.confirmBooking(token, bookingId);
+      case cancel:
+        return DashboardApiService.cancelBooking(token, bookingId);
+      case reject:
+        return DashboardApiService.rejectBooking(token, bookingId);
+    }
+  }
+
+  String get successMessage {
+    switch (this) {
+      case confirm:
+        return 'Бронирование подтверждено';
+      case cancel:
+        return 'Запись отменена';
+      case reject:
+        return 'Бронирование отклонено';
+    }
+  }
+
+  String get failureMessage {
+    switch (this) {
+      case confirm:
+        return 'Не удалось подтвердить бронирование';
+      case cancel:
+        return 'Ошибка отмены';
+      case reject:
+        return 'Не удалось отклонить бронирование';
+    }
+  }
+
+  String get errorShort {
+    switch (this) {
+      case confirm:
+        return 'Ошибка подтверждения';
+      case cancel:
+        return 'Ошибка отмены';
+      case reject:
+        return 'Ошибка отклонения';
+    }
+  }
+
+  Color get snackBarColor {
+    switch (this) {
+      case confirm:
+        return Colors.green;
+      case cancel:
+      case reject:
+        return Colors.orange;
+    }
+  }
+}
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -83,25 +143,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await _loadData();
   }
 
-  Future<void> _handleConfirmBooking(String bookingId) async {
+  Future<void> _handleBookingAction(BookingAction action, String bookingId) async {
     final token = context.read<AuthService>().accessToken;
     if (token == null || token.isEmpty) return;
     try {
-      final ok = await DashboardApiService.confirmBooking(token, bookingId);
+      final ok = await action.apiCall(token, bookingId);
       if (!mounted) return;
       if (ok) {
         context.read<BookingsCache>().invalidate();
         await _loadData();
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Бронирование подтверждено'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(action.successMessage),
+            backgroundColor: action.snackBarColor,
           ),
         );
       } else {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Не удалось подтвердить бронирование'),
+          SnackBar(
+            content: Text(action.failureMessage),
             backgroundColor: Colors.red,
           ),
         );
@@ -113,37 +173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           : e.toString();
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
         SnackBar(
-          content: Text(message.length > 80 ? 'Ошибка подтверждения' : message),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _handleCancelBooking(String bookingId) async {
-    final token = context.read<AuthService>().accessToken;
-    if (token == null || token.isEmpty) return;
-    try {
-      final ok = await DashboardApiService.cancelBooking(token, bookingId);
-      if (!mounted) return;
-      if (ok) {
-        context.read<BookingsCache>().invalidate();
-        await _loadData();
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Запись отменена'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      final message = e is Exception
-          ? e.toString().replaceFirst('Exception: ', '')
-          : e.toString();
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(
-          content: Text(message.length > 80 ? 'Ошибка отмены' : message),
+          content: Text(message.length > 80 ? action.errorShort : message),
           backgroundColor: Colors.red,
         ),
       );
@@ -163,43 +193,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       },
       existingBooking: booking,
     );
-  }
-
-  Future<void> _handleRejectBooking(String bookingId) async {
-    final token = context.read<AuthService>().accessToken;
-    if (token == null || token.isEmpty) return;
-    try {
-      final ok = await DashboardApiService.rejectBooking(token, bookingId);
-      if (!mounted) return;
-      if (ok) {
-        context.read<BookingsCache>().invalidate();
-        await _loadData();
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Бронирование отклонено'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Не удалось отклонить бронирование'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      final message = e is Exception
-          ? e.toString().replaceFirst('Exception: ', '')
-          : e.toString();
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(
-          content: Text(message.length > 80 ? 'Ошибка отклонения' : message),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   List<Booking> _getTodayBookings() {
@@ -254,12 +247,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         alignment: WrapAlignment.end,
                         children: [
                           if (_salon != null)
-                            _buildHeaderPill(
+                            DashboardHeaderPill(
                               icon: Icons.star_rounded,
                               label: '—',
                               onTap: null,
                             ),
-                          _buildHeaderIconPill(
+                          DashboardHeaderIconPill(
                             icon: Icons.notifications_outlined,
                             onTap: () => Navigator.push(
                               context,
@@ -290,7 +283,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: _buildLinkCard(
+                          child: DashboardLinkCard(
                             title: 'Клиенты',
                             icon: Icons.people_outline,
                             color: AppColors.primary100,
@@ -300,7 +293,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: _buildLinkCard(
+                          child: DashboardLinkCard(
                             title: 'Online booking',
                             icon: Icons.calendar_month_outlined,
                             color: AppColors.secondary100,
@@ -340,17 +333,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onViewAll: () =>
                           Navigator.of(context).pushNamed('/all-bookings'),
                       onEditBooking: _handleEditBooking,
-                      onCancelBooking: _handleCancelBooking,
-                      onConfirmBooking: _handleConfirmBooking,
-                      onRejectBooking: _handleRejectBooking,
+                      onCancelBooking: (id) => _handleBookingAction(BookingAction.cancel, id),
+                      onConfirmBooking: (id) => _handleBookingAction(BookingAction.confirm, id),
+                      onRejectBooking: (id) => _handleBookingAction(BookingAction.reject, id),
                       onBookingPress: (booking) {
                         BookingDetailModal.show(
                           context,
                           booking: booking,
                           onEdit: _handleEditBooking,
-                          onCancel: _handleCancelBooking,
-                          onConfirm: _handleConfirmBooking,
-                          onReject: _handleRejectBooking,
+                          onCancel: (id) => _handleBookingAction(BookingAction.cancel, id),
+                          onConfirm: (id) => _handleBookingAction(BookingAction.confirm, id),
+                          onReject: (id) => _handleBookingAction(BookingAction.reject, id),
                         );
                       },
                     ),

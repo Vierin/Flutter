@@ -9,6 +9,7 @@ import 'screens/main_shell.dart';
 import 'services/auth_service.dart';
 import 'services/cache/bookings_cache.dart';
 import 'services/cache/salon_cache.dart';
+import 'services/cache/services_staff_cache.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => SalonCache()),
         ChangeNotifierProvider(create: (_) => BookingsCache()),
+        ChangeNotifierProvider(create: (_) => ServicesStaffCache()),
       ],
       child: MaterialApp(
         title: 'Henzo',

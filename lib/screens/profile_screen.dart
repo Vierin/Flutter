@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants/colors.dart';
 import '../services/auth_service.dart';
+import '../services/cache/salon_cache.dart';
+import '../services/cache/services_staff_cache.dart';
 import '../services/dashboard_api_service.dart';
 import '../services/services_api_service.dart';
 import '../services/staff_api_service.dart';
@@ -49,14 +51,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) setState(() => _loadingCounts = false);
         return;
       }
-      final results = await Future.wait([
-        StaffApiService.getBySalon(token, salon.id),
-        ServicesApiService.getBySalon(token, salon.id),
-      ]);
+      final cache = context.read<ServicesStaffCache>();
+      final staff = await cache.getStaffForSalon(token, salon.id);
+      final services = await cache.getServicesForSalon(token, salon.id);
       if (!mounted) return;
       setState(() {
-        _staffCount = results[0].length;
-        _servicesCount = results[1].length;
+        _staffCount = staff.length;
+        _servicesCount = services.length;
         _loadingCounts = false;
       });
     } catch (_) {

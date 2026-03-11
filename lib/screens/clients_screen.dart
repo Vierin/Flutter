@@ -205,7 +205,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   onTap: () => setState(() => _filter = ClientFilter.whiteList),
                 ),
                 const SizedBox(width: 8),
-                _FilterChip(
+                ClientsFilterChip(
                   label: 'Заблокированные',
                   isSelected: _filter == ClientFilter.blocked,
                   onTap: () => setState(() => _filter = ClientFilter.blocked),

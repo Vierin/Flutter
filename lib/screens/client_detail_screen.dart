@@ -5,6 +5,7 @@ import '../../constants/colors.dart';
 import '../../utils/currency_format.dart';
 import '../../models/booking.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/bookings_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';

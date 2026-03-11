@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../models/service_item.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/services_staff_cache.dart';
 import '../../services/staff_api_service.dart';
 import '../../services/services_api_service.dart';
 
@@ -91,6 +92,7 @@ class _AddStaffScreenState extends State<AddStaffScreen> {
       );
       if (!mounted) return;
       if (created != null) {
+        context.read<ServicesStaffCache>().invalidateStaff(widget.salonId);
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           const SnackBar(
             content: Text('Сотрудник добавлен'),

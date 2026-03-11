@@ -5,6 +5,8 @@ import '../../models/salon.dart';
 import '../../utils/currency_format.dart';
 import '../../models/service_item.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/salon_cache.dart';
+import '../../services/cache/services_staff_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../services/services_api_service.dart';
 
@@ -59,7 +61,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     try {
       final salon = await context.read<SalonCache>().getSalon(token);
       final services = salon != null
-          ? await ServicesApiService.getBySalon(token, salon.id)
+          ? await context.read<ServicesStaffCache>().getServicesForSalon(token, salon.id)
           : <ServiceItem>[];
       if (mounted) {
         setState(() {
@@ -246,6 +248,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
       final ok = await ServicesApiService.delete(token, item.id);
       if (!mounted) return;
       if (ok) {
+        context.read<ServicesStaffCache>().invalidateServices(_salon?.id);
         await _loadData();
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           const SnackBar(content: Text('Услуга удалена'), backgroundColor: Colors.green),
@@ -704,6 +707,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                 );
                                 if (!mounted) return;
                                 if (updated != null) {
+                                  context.read<ServicesStaffCache>().invalidateServices(_salon?.id);
                                   await _loadData();
                                   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
                                     const SnackBar(

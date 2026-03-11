@@ -4,6 +4,8 @@ import '../../constants/colors.dart';
 import '../../models/salon.dart';
 import '../../models/staff_member.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/salon_cache.dart';
+import '../../services/cache/services_staff_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../services/staff_api_service.dart';
 import 'add_staff_screen.dart';
@@ -41,7 +43,7 @@ class _StaffScreenState extends State<StaffScreen> {
     try {
       final salon = await context.read<SalonCache>().getSalon(token);
       final staff = salon != null
-          ? await StaffApiService.getBySalon(token, salon.id)
+          ? await context.read<ServicesStaffCache>().getStaffForSalon(token, salon.id)
           : <StaffMember>[];
       if (mounted) {
         setState(() {
@@ -89,6 +91,7 @@ class _StaffScreenState extends State<StaffScreen> {
       final ok = await StaffApiService.delete(token, member.id);
       if (!mounted) return;
       if (ok) {
+        context.read<ServicesStaffCache>().invalidateStaff(_salon?.id);
         await _loadData();
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           const SnackBar(
@@ -409,6 +412,7 @@ class _StaffScreenState extends State<StaffScreen> {
                                 );
                                 if (!mounted) return;
                                 if (updated != null) {
+                                  context.read<ServicesStaffCache>().invalidateStaff(_salon?.id);
                                   await _loadData();
                                   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
                                     const SnackBar(
