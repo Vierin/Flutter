@@ -204,6 +204,16 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
                   dayShortName: scheduleDayShortNames[index],
                   dayName: scheduleDayNames[index],
                   schedule: _schedules[index],
+                  onDayPillTap: () {
+                    if (_schedules[index].hasWorkingHours) {
+                      setState(() {
+                        _schedules[index].workFrom = '';
+                        _schedules[index].workTo = '';
+                      });
+                    } else {
+                      _openWorkingHoursModal(context, index);
+                    }
+                  },
                   onWorkingHoursTap: () => _openWorkingHoursModal(context, index),
                   onLunchTap: () => _openLunchModal(context, index),
                   onLunchChanged: (v) =>
@@ -249,6 +259,7 @@ class _DayRow extends StatelessWidget {
   final String dayShortName;
   final String dayName;
   final _DaySchedule schedule;
+  final VoidCallback onDayPillTap;
   final VoidCallback onWorkingHoursTap;
   final VoidCallback onLunchTap;
   final ValueChanged<bool> onLunchChanged;
@@ -257,6 +268,7 @@ class _DayRow extends StatelessWidget {
     required this.dayShortName,
     required this.dayName,
     required this.schedule,
+    required this.onDayPillTap,
     required this.onWorkingHoursTap,
     required this.onLunchTap,
     required this.onLunchChanged,
@@ -271,25 +283,37 @@ class _DayRow extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 48,
-              margin: const EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? AppColors.primary500
-                  : AppColors.neutral200,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              dayShortName,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: isActive ? Colors.white : AppColors.textTertiary,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onDayPillTap,
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  width: 48,
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? AppColors.primary500
+                        : AppColors.neutral200,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  alignment: Alignment.center,
+                  child: Tooltip(
+                    message: isActive
+                        ? 'Тап: выключить день из графика'
+                        : 'Тап: включить день и задать часы',
+                    child: Text(
+                      dayShortName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isActive ? Colors.white : AppColors.textTertiary,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(16),

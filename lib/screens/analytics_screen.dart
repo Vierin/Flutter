@@ -69,12 +69,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const Text(
                 'Аналитика',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 24, 
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
-
+              centerTitle: true,
               const SizedBox(height: 16),
               // Period picker
               Row(
@@ -133,7 +133,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const SizedBox(height: 24),
               // Slider: Доходы и расходы | Sales | Services
               SizedBox(
-                height: 230,
+                height: 225,
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: (i) => setState(() => _currentPage = i),
@@ -154,7 +154,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(3, (i) {

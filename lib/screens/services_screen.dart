@@ -7,10 +7,16 @@ import '../../models/service_item.dart';
 import '../../services/auth_service.dart';
 import '../../services/cache/salon_cache.dart';
 import '../../services/cache/services_staff_cache.dart';
-import '../../services/dashboard_api_service.dart';
 import '../../services/services_api_service.dart';
 
-enum ServicesSort { nameAz, nameZa, priceAsc, priceDesc, durationAsc, durationDesc }
+enum ServicesSort {
+  nameAz,
+  nameZa,
+  priceAsc,
+  priceDesc,
+  durationAsc,
+  durationDesc,
+}
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -35,7 +41,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
-    _searchController.addListener(() => setState(() => _searchQuery = _searchController.text.trim()));
+    _searchController.addListener(
+      () => setState(() => _searchQuery = _searchController.text.trim()),
+    );
   }
 
   @override
@@ -61,17 +69,22 @@ class _ServicesScreenState extends State<ServicesScreen> {
     try {
       final salon = await context.read<SalonCache>().getSalon(token);
       final services = salon != null
-          ? await context.read<ServicesStaffCache>().getServicesForSalon(token, salon.id)
+          ? await context.read<ServicesStaffCache>().getServicesForSalon(
+              token,
+              salon.id,
+            )
           : <ServiceItem>[];
       if (mounted) {
         setState(() {
           _salon = salon;
           _services = services;
           _isLoading = false;
-          if (_selectedCategory != null && !_services.any((s) => s.categoryName == _selectedCategory)) {
+          if (_selectedCategory != null &&
+              !_services.any((s) => s.categoryName == _selectedCategory)) {
             _selectedCategory = null;
           }
-          if (_selectedGroup != null && !_services.any((s) => s.groupName == _selectedGroup)) {
+          if (_selectedGroup != null &&
+              !_services.any((s) => s.groupName == _selectedGroup)) {
             _selectedGroup = null;
           }
         });
@@ -121,7 +134,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
     var list = List<ServiceItem>.from(_services);
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
-      list = list.where((s) => s.displayName.toLowerCase().contains(q)).toList();
+      list = list
+          .where((s) => s.displayName.toLowerCase().contains(q))
+          .toList();
     }
     if (_selectedCategory != null && _selectedCategory!.isNotEmpty) {
       list = list.where((s) => s.categoryName == _selectedCategory).toList();
@@ -148,23 +163,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
     return list;
   }
 
-  String _sortLabel() {
-    switch (_sort) {
-      case ServicesSort.nameAz:
-        return 'Имя (А-Я)';
-      case ServicesSort.nameZa:
-        return 'Имя (Я-А)';
-      case ServicesSort.priceAsc:
-        return 'Цена (сначала дешевле)';
-      case ServicesSort.priceDesc:
-        return 'Цена (сначала дороже)';
-      case ServicesSort.durationAsc:
-        return 'Длительность (короткие)';
-      case ServicesSort.durationDesc:
-        return 'Длительность (длинные)';
-    }
-  }
-
   void _showSortMenu() {
     showModalBottomSheet(
       context: context,
@@ -175,7 +173,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
             children: [
               const Padding(
                 padding: EdgeInsets.all(16),
-                child: Text('Сортировать по', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Сортировать по',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
               ),
               ...ServicesSort.values.map((value) {
                 final labels = {
@@ -220,7 +221,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   void _showManageGroups() {
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      const SnackBar(content: Text('Управление группами доступно в веб-версии')),
+      const SnackBar(
+        content: Text('Управление группами доступно в веб-версии'),
+      ),
     );
   }
 
@@ -231,7 +234,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
         title: const Text('Удалить услугу'),
         content: Text('Удалить «${item.displayName}»?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Отмена'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -251,11 +257,17 @@ class _ServicesScreenState extends State<ServicesScreen> {
         context.read<ServicesStaffCache>().invalidateServices(_salon?.id);
         await _loadData();
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Услуга удалена'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Услуга удалена'),
+            backgroundColor: Colors.green,
+          ),
         );
       } else {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Не удалось удалить'), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text('Не удалось удалить'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } catch (e) {
@@ -291,7 +303,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: priceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Цена (VND) *',
                   border: OutlineInputBorder(),
@@ -310,7 +324,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Отмена')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Отмена'),
+          ),
           FilledButton(
             onPressed: () async {
               final name = nameController.text.trim();
@@ -320,11 +337,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 );
                 return;
               }
-              final price = double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0.0;
+              final price =
+                  double.tryParse(priceController.text.replaceAll(',', '.')) ??
+                  0.0;
               final duration = int.tryParse(durationController.text) ?? 30;
               if (price <= 0 || duration <= 0) {
                 ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                  const SnackBar(content: Text('Цена и длительность должны быть больше 0')),
+                  const SnackBar(
+                    content: Text('Цена и длительность должны быть больше 0'),
+                  ),
                 );
                 return;
               }
@@ -345,17 +366,26 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 if (created != null) {
                   await _loadData();
                   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(content: Text('Услуга добавлена'), backgroundColor: Colors.green),
+                    const SnackBar(
+                      content: Text('Услуга добавлена'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 } else {
                   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(content: Text('Не удалось добавить'), backgroundColor: Colors.red),
+                    const SnackBar(
+                      content: Text('Не удалось добавить'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+                    SnackBar(
+                      content: Text('Ошибка: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               } finally {
@@ -371,11 +401,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   void _openEditDialog(ServiceItem item) {
     final nameController = TextEditingController(text: item.name);
-    final descriptionController = TextEditingController(text: item.description ?? '');
+    final descriptionController = TextEditingController(
+      text: item.description ?? '',
+    );
     final priceController = TextEditingController(
       text: item.price != null ? (item.price!.toStringAsFixed(0)) : '0',
     );
-    final durationController = TextEditingController(text: (item.duration ?? 30).toString());
+    final durationController = TextEditingController(
+      text: (item.duration ?? 30).toString(),
+    );
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -423,9 +457,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.borderPrimary),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderPrimary,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -450,9 +489,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.borderPrimary),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderPrimary,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -465,9 +509,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      if (item.categoryName != null && item.categoryName!.trim().isNotEmpty)
+                      if (item.categoryName != null &&
+                          item.categoryName!.trim().isNotEmpty)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.backgroundPrimary,
                             borderRadius: BorderRadius.circular(12),
@@ -497,7 +545,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         )
                       else
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.backgroundPrimary,
                             borderRadius: BorderRadius.circular(12),
@@ -505,7 +556,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           ),
                           child: Text(
                             'Не выбрано',
-                            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       const SizedBox(height: 16),
@@ -522,11 +576,16 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         children: [
                           Expanded(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.backgroundPrimary,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.borderPrimary),
+                                border: Border.all(
+                                  color: AppColors.borderPrimary,
+                                ),
                               ),
                               child: Row(
                                 children: [
@@ -541,7 +600,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                       ),
                                     ),
                                   ),
-                                  const Icon(Icons.keyboard_arrow_down, size: 20),
+                                  const Icon(
+                                    Icons.keyboard_arrow_down,
+                                    size: 20,
+                                  ),
                                 ],
                               ),
                             ),
@@ -556,7 +618,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
                               child: const SizedBox(
                                 width: 44,
                                 height: 44,
-                                child: Icon(Icons.add, color: Colors.white, size: 24),
+                                child: Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
                               ),
                             ),
                           ),
@@ -581,7 +647,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       ),
                       const SizedBox(height: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.backgroundPrimary,
                           borderRadius: BorderRadius.circular(12),
@@ -589,7 +658,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         ),
                         child: Text(
                           'Выберите мастеров',
-                          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -621,9 +693,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.borderPrimary),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderPrimary,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -638,7 +715,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       const SizedBox(height: 6),
                       TextField(
                         controller: priceController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: AppColors.backgroundPrimary,
@@ -647,9 +726,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.borderPrimary),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderPrimary,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -673,27 +757,43 @@ class _ServicesScreenState extends State<ServicesScreen> {
                             onPressed: () async {
                               final name = nameController.text.trim();
                               if (name.isEmpty) {
-                                ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                                  const SnackBar(content: Text('Введите название услуги')),
+                                ScaffoldMessenger.maybeOf(
+                                  context,
+                                )?.showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Введите название услуги'),
+                                  ),
                                 );
                                 return;
                               }
-                              final description = descriptionController.text.trim();
-                              final price = double.tryParse(
-                                    priceController.text.replaceAll(',', '.')) ??
-                                  item.price ?? 0.0;
+                              final description = descriptionController.text
+                                  .trim();
+                              final price =
+                                  double.tryParse(
+                                    priceController.text.replaceAll(',', '.'),
+                                  ) ??
+                                  item.price ??
+                                  0.0;
                               final duration =
-                                  int.tryParse(durationController.text) ?? item.duration ?? 30;
+                                  int.tryParse(durationController.text) ??
+                                  item.duration ??
+                                  30;
                               if (price <= 0 || duration <= 0) {
-                                ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                                ScaffoldMessenger.maybeOf(
+                                  context,
+                                )?.showSnackBar(
                                   const SnackBar(
-                                      content: Text(
-                                          'Цена и длительность должны быть больше 0')),
+                                    content: Text(
+                                      'Цена и длительность должны быть больше 0',
+                                    ),
+                                  ),
                                 );
                                 return;
                               }
                               Navigator.pop(ctx);
-                              final token = context.read<AuthService>().accessToken;
+                              final token = context
+                                  .read<AuthService>()
+                                  .accessToken;
                               if (token == null) return;
                               setState(() => _isActionLoading = true);
                               try {
@@ -701,42 +801,56 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                   token,
                                   item.id,
                                   name: name,
-                                  description: description.isEmpty ? null : description,
+                                  description: description.isEmpty
+                                      ? null
+                                      : description,
                                   price: price,
                                   duration: duration,
                                 );
                                 if (!mounted) return;
                                 if (updated != null) {
-                                  context.read<ServicesStaffCache>().invalidateServices(_salon?.id);
+                                  context
+                                      .read<ServicesStaffCache>()
+                                      .invalidateServices(_salon?.id);
                                   await _loadData();
-                                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                                  ScaffoldMessenger.maybeOf(
+                                    context,
+                                  )?.showSnackBar(
                                     const SnackBar(
-                                        content: Text('Изменения сохранены'),
-                                        backgroundColor: Colors.green),
+                                      content: Text('Изменения сохранены'),
+                                      backgroundColor: Colors.green,
+                                    ),
                                   );
                                 } else {
-                                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                                  ScaffoldMessenger.maybeOf(
+                                    context,
+                                  )?.showSnackBar(
                                     const SnackBar(
-                                        content: Text('Не удалось сохранить'),
-                                        backgroundColor: Colors.red),
+                                      content: Text('Не удалось сохранить'),
+                                      backgroundColor: Colors.red,
+                                    ),
                                   );
                                 }
                               } catch (e) {
                                 if (mounted) {
-                                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                                  ScaffoldMessenger.maybeOf(
+                                    context,
+                                  )?.showSnackBar(
                                     SnackBar(
-                                        content: Text('Ошибка: $e'),
-                                        backgroundColor: Colors.red),
-                                );
+                                      content: Text('Ошибка: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
                                 }
                               } finally {
-                                if (mounted) setState(() => _isActionLoading = false);
+                                if (mounted)
+                                  setState(() => _isActionLoading = false);
                               }
                             },
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.primary500,
                             ),
-                            child: const Text('Обновить услугу'),
+                            child: const Text('Обновить'),
                           ),
                         ],
                       ),
@@ -764,7 +878,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         title: const Text(
           'Услуги',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 24,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
@@ -773,94 +887,212 @@ class _ServicesScreenState extends State<ServicesScreen> {
         backgroundColor: AppColors.backgroundPrimary,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
+        actions: [
+          if (_salon != null)
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              tooltip: 'Сортировка и фильтры',
+              onPressed: _isLoading ? null : _showSortMenu,
+            ),
+        ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary500))
-              : _salon == null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.store_outlined, size: 48, color: AppColors.textTertiary),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Сначала настройте салон',
-                          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        FilledButton.icon(
-                          onPressed: _isLoading ? null : _loadData,
-                          icon: const Icon(Icons.refresh, size: 20),
-                          label: const Text('Повторить'),
-                          style: FilledButton.styleFrom(backgroundColor: AppColors.primary500),
-                        ),
-                      ],
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary500),
+            )
+          : _salon == null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.store_outlined,
+                      size: 48,
+                      color: AppColors.textTertiary,
                     ),
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadData,
-                  color: AppColors.primary500,
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 16),
+                    Text(
+                      'Сначала настройте салон',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: _isLoading ? null : _loadData,
+                      icon: const Icon(Icons.refresh, size: 20),
+                      label: const Text('Повторить'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              color: AppColors.primary500,
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Управляйте услугами и ценами вашего салона',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
                             children: [
-                              Text(
-                                'Управляйте услугами и ценами вашего салона',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textSecondary,
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _showManageGroups,
+                                  icon: const Icon(
+                                    Icons.folder_outlined,
+                                    size: 20,
+                                  ),
+                                  label: const Text('Добавить/Удалить группу'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.textPrimary,
+                                    side: BorderSide(
+                                      color: AppColors.borderPrimary,
+                                    ),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: _showManageGroups,
-                                      icon: const Icon(Icons.folder_outlined, size: 20),
-                                      label: const Text('Добавить/Удалить группу'),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppColors.textPrimary,
-                                        side: BorderSide(color: AppColors.borderPrimary),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  FilledButton.icon(
-                                    onPressed: _isActionLoading ? null : _openAddDialog,
-                                    icon: const Icon(Icons.add, size: 20),
-                                    label: const Text('Добавить'),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: AppColors.primary500,
-                                    ),
-                                  ),
-                                ],
+                              const SizedBox(width: 12),
+                              FilledButton.icon(
+                                onPressed: _isActionLoading
+                                    ? null
+                                    : _openAddDialog,
+                                icon: const Icon(Icons.add, size: 20),
+                                label: const Text('Добавить'),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primary500,
+                                ),
                               ),
                             ],
                           ),
-                        ),
+                        ],
                       ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                          child: Card(
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Категория',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    label: const Text('Все категории'),
+                                    selected: _selectedCategory == null,
+                                    onSelected: (_) =>
+                                        setState(() => _selectedCategory = null),
+                                    selectedColor: AppColors.primary100,
+                                    checkmarkColor: AppColors.primary500,
+                                  ),
+                                ),
+                                ..._uniqueCategories.map(
+                                  (c) => Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: FilterChip(
+                                      label: Text(c),
+                                      selected: _selectedCategory == c,
+                                      onSelected: (_) =>
+                                          setState(() => _selectedCategory = c),
+                                      selectedColor: AppColors.primary100,
+                                      checkmarkColor: AppColors.primary500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Группа',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    label: const Text('Все группы'),
+                                    selected: _selectedGroup == null,
+                                    onSelected: (_) =>
+                                        setState(() => _selectedGroup = null),
+                                    selectedColor: AppColors.primary100,
+                                    checkmarkColor: AppColors.primary500,
+                                  ),
+                                ),
+                                ..._uniqueGroups.map(
+                                  (g) => Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: FilterChip(
+                                      label: Text(g),
+                                      selected: _selectedGroup == g,
+                                      onSelected: (_) =>
+                                          setState(() => _selectedGroup = g),
+                                      selectedColor: AppColors.primary100,
+                                      checkmarkColor: AppColors.primary500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Card(
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
-                              side: const BorderSide(color: AppColors.borderPrimary),
+                              side: const BorderSide(
+                                color: AppColors.borderPrimary,
+                              ),
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.stretch,
                                 children: [
                                   Text(
                                     'Поиск',
@@ -876,111 +1108,21 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                     decoration: const InputDecoration(
                                       hintText: 'Поиск по имени...',
                                       border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Категория',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  DropdownButtonFormField<String>(
-                                    value: _selectedCategory != null && _uniqueCategories.contains(_selectedCategory)
-                                        ? _selectedCategory
-                                        : null,
-                                    decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor: AppColors.backgroundPrimary,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
                                       ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(color: AppColors.borderPrimary),
-                                      ),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                    ),
-                                    hint: const Text('Все категории'),
-                                    items: [
-                                      const DropdownMenuItem(value: null, child: Text('Все категории')),
-                                      ..._uniqueCategories.map((c) => DropdownMenuItem(value: c, child: Text(c))),
-                                    ],
-                                    onChanged: (v) => setState(() => _selectedCategory = v),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Группа',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textSecondary,
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  DropdownButtonFormField<String>(
-                                    value: _selectedGroup != null && _uniqueGroups.contains(_selectedGroup)
-                                        ? _selectedGroup
-                                        : null,
-                                    decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor: AppColors.backgroundPrimary,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(color: AppColors.borderPrimary),
-                                      ),
-                                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                    ),
-                                    hint: const Text('Все группы'),
-                                    items: [
-                                      const DropdownMenuItem(value: null, child: Text('Все группы')),
-                                      ..._uniqueGroups.map((g) => DropdownMenuItem(value: g, child: Text(g))),
-                                    ],
-                                    onChanged: (v) => setState(() => _selectedGroup = v),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Сортировать по',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  InkWell(
-                                    onTap: _showSortMenu,
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: InputDecorator(
-                                      decoration: InputDecoration(
-                                        filled: true,
-                                        fillColor: AppColors.backgroundPrimary,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
-                                          borderSide: const BorderSide(color: AppColors.borderPrimary),
-                                        ),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                        suffixIcon: const Icon(Icons.keyboard_arrow_down),
-                                      ),
-                                      child: Text(_sortLabel()),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 12),
                                   OutlinedButton(
                                     onPressed: _clearFilters,
                                     style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.textPrimary,
-                                      side: BorderSide(color: AppColors.borderPrimary),
+                                      foregroundColor:
+                                          AppColors.textPrimary,
+                                      side: BorderSide(
+                                        color: AppColors.borderPrimary,
+                                      ),
                                     ),
                                     child: const Text('Очистить'),
                                   ),
@@ -988,57 +1130,67 @@ class _ServicesScreenState extends State<ServicesScreen> {
                               ),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_filteredAndSortedServices.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.spa_outlined,
+                              size: 64,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _services.isEmpty
+                                  ? 'Пока нет услуг'
+                                  : 'Ничего не найдено',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _services.isEmpty
+                                  ? 'Добавьте первую услугу'
+                                  : 'Измените фильтры',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      if (_filteredAndSortedServices.isEmpty)
-                        SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.spa_outlined, size: 64, color: AppColors.textSecondary),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _services.isEmpty ? 'Пока нет услуг' : 'Ничего не найдено',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _services.isEmpty ? 'Добавьте первую услугу' : 'Измените фильтры',
-                                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      else
-                        SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final item = _filteredAndSortedServices[index];
-                                return _ServiceCard(
-                                  item: item,
-                                  formatPrice: formatVnd,
-                                  formatDuration: _formatDuration,
-                                  isActionLoading: _isActionLoading,
-                                  onEdit: () => _openEditDialog(item),
-                                  onDelete: () => _deleteService(item),
-                                );
-                              },
-                              childCount: _filteredAndSortedServices.length,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final item = _filteredAndSortedServices[index];
+                          return _ServiceCard(
+                            item: item,
+                            formatPrice: formatVnd,
+                            formatDuration: _formatDuration,
+                            isActionLoading: _isActionLoading,
+                            onEdit: () => _openEditDialog(item),
+                            onDelete: () => _deleteService(item),
+                          );
+                        }, childCount: _filteredAndSortedServices.length),
+                      ),
+                    ),
+                ],
+              ),
+            ),
     );
   }
 }
@@ -1093,7 +1245,10 @@ class _ServiceCard extends StatelessWidget {
                       runSpacing: 6,
                       children: item.tagNames.map((tag) {
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primary50,
                             borderRadius: BorderRadius.circular(20),
@@ -1140,7 +1295,11 @@ class _ServiceCard extends StatelessWidget {
               ),
             ),
             if (isActionLoading)
-              const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
             else
               Row(
                 mainAxisSize: MainAxisSize.min,

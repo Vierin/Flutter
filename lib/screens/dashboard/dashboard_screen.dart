@@ -249,7 +249,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           if (_salon != null)
                             DashboardHeaderPill(
                               icon: Icons.star_rounded,
-                              label: '—',
+                              label: _salon!.rating != null
+                                  ? _salon!.rating!.toStringAsFixed(1)
+                                  : '—',
                               onTap: null,
                             ),
                           DashboardHeaderIconPill(

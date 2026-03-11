@@ -72,7 +72,10 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
       if (mounted) {
         setState(() => _autoConfirm = !value);
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(content: Text('Не удалось сохранить'), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text('Не удалось сохранить'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -90,12 +93,21 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
       return Scaffold(
         backgroundColor: AppColors.backgroundSecondary,
         appBar: AppBar(
-          title: const Text('Online booking', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+          title: const Text(
+            'Online booking',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
           backgroundColor: AppColors.backgroundPrimary,
           foregroundColor: AppColors.textPrimary,
           elevation: 0,
         ),
-        body: const Center(child: CircularProgressIndicator(color: AppColors.primary500)),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.primary500),
+        ),
       );
     }
 
@@ -103,12 +115,24 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
       return Scaffold(
         backgroundColor: AppColors.backgroundSecondary,
         appBar: AppBar(
-          title: const Text('Online booking', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+          title: const Text(
+            'Online booking',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
           backgroundColor: AppColors.backgroundPrimary,
           foregroundColor: AppColors.textPrimary,
           elevation: 0,
         ),
-        body: const Center(child: Text('Сначала настройте салон', style: TextStyle(color: AppColors.textSecondary))),
+        body: const Center(
+          child: Text(
+            'Сначала настройте салон',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
       );
     }
 
@@ -121,8 +145,13 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
         ),
         title: const Text(
           'Online booking',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
         ),
+        centerTitle: true,
         backgroundColor: AppColors.backgroundPrimary,
         elevation: 0,
       ),
@@ -134,7 +163,11 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
             // Booking period
             const Text(
               'Booking period',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -163,7 +196,11 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
                 const Expanded(
                   child: Text(
                     'Automatic confirmation',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
                 Switch(
@@ -192,7 +229,9 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
                 backgroundColor: AppColors.primary500,
                 foregroundColor: AppColors.textInverse,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],

@@ -15,6 +15,7 @@ import '../../models/service_item.dart';
 import '../../services/services_api_service.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
+import 'work_schedule_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -444,9 +445,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   icon: Icons.calendar_month_outlined,
                   onTap: () {
                     Navigator.pop(context);
-                    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                      const SnackBar(
-                        content: Text('Редактирование расписания в разработке'),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const WorkScheduleScreen(),
                       ),
                     );
                   },
@@ -749,6 +751,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         _selectedDate = d;
                         _expandedView = false;
                       }),
+                      compact: true,
                     ),
                   ),
                 );
@@ -760,7 +763,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _dayPill(int dayNum, int count, bool isSelected, VoidCallback onTap) {
+  Widget _dayPill(
+    int dayNum,
+    int count,
+    bool isSelected,
+    VoidCallback onTap, {
+    bool compact = false,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -777,32 +786,44 @@ class _CalendarScreenState extends State<CalendarScreen> {
             width: isSelected ? 2 : 1,
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '$dayNum',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: isSelected
-                    ? AppColors.primary500
-                    : AppColors.textPrimary,
+        alignment: Alignment.center,
+        child: compact
+            ? Text(
+                '$dayNum',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected
+                      ? AppColors.primary500
+                      : AppColors.textPrimary,
+                ),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '$dayNum',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected
+                          ? AppColors.primary500
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$count',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isSelected
+                          ? AppColors.primary500
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              '$count',
-              style: TextStyle(
-                fontSize: 10,
-                color: isSelected
-                    ? AppColors.primary500
-                    : AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

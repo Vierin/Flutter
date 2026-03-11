@@ -162,7 +162,7 @@ class _PlusButton extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
         child: Center(
-          child: Icon(Icons.add_circle, size: 28, color: AppColors.primary500),
+          child: Icon(Icons.add_circle, size: 40, color: AppColors.primary500),
         ),
       ),
     );

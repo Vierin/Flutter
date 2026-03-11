@@ -14,6 +14,7 @@ class Salon {
   final bool? autoConfirmBookings;
   final double? latitude;
   final double? longitude;
+  final double? rating;
 
   Salon({
     required this.id,
@@ -31,6 +32,7 @@ class Salon {
     this.autoConfirmBookings,
     this.latitude,
     this.longitude,
+    this.rating,
   });
 
   factory Salon.fromJson(Map<String, dynamic> json) {
@@ -57,6 +59,9 @@ class Salon {
     double? lon;
     final lonVal = json['longitude'];
     if (lonVal != null) lon = (lonVal is num) ? lonVal.toDouble() : double.tryParse(lonVal.toString());
+    double? rating;
+    final ratingVal = json['rating'];
+    if (ratingVal != null) rating = (ratingVal is num) ? ratingVal.toDouble() : double.tryParse(ratingVal.toString());
     return Salon(
       id: id.toString(),
       name: json['name'] as String?,
@@ -73,6 +78,7 @@ class Salon {
       autoConfirmBookings: json['autoConfirmBookings'] as bool?,
       latitude: lat,
       longitude: lon,
+      rating: rating,
     );
   }
 
@@ -93,6 +99,7 @@ class Salon {
       'autoConfirmBookings': autoConfirmBookings,
       'latitude': latitude,
       'longitude': longitude,
+      'rating': rating,
     };
   }
 

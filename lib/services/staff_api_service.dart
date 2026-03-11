@@ -68,7 +68,7 @@ class StaffApiService {
     return map != null ? StaffMember.fromJson(map) : null;
   }
 
-  /// PUT /staff/:id — обновить сотрудника.
+  /// PUT /staff/:id — обновить сотрудника (name, email, phone, accessLevel, serviceIds).
   static Future<StaffMember?> update(
     String accessToken,
     String id, {
@@ -76,6 +76,7 @@ class StaffApiService {
     String? email,
     String? phone,
     String? accessLevel,
+    List<String>? serviceIds,
   }) async {
     final url = Uri.parse('$_baseUrl/staff/$id');
     final data = <String, dynamic>{};
@@ -83,6 +84,7 @@ class StaffApiService {
     if (email != null) data['email'] = email;
     if (phone != null) data['phone'] = phone;
     if (accessLevel != null) data['accessLevel'] = accessLevel;
+    if (serviceIds != null) data['serviceIds'] = serviceIds;
     final response = await http.put(
       url,
       headers: _headers(accessToken),
