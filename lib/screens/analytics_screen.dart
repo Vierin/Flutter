@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../constants/colors.dart';
+import '../l10n/locale_provider.dart';
 import '../utils/currency_format.dart';
 import 'period_picker_screen.dart';
 
@@ -57,29 +59,31 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundSecondary,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              const Text(
-                'Аналитика',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Period picker
-              Row(
+    return Consumer<LocaleProvider>(
+      builder: (context, locale, _) {
+        return Scaffold(
+          backgroundColor: AppColors.backgroundSecondary,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 16),
                   Text(
-                    'Период:',
+                    locale.t('analytics.title'),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Period picker
+                  Row(
+                    children: [
+                      Text(
+                        locale.t('analytics.period'),
                     style: TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
@@ -128,9 +132,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              _buildClientsCard(),
+              _buildClientsCard(locale),
               const SizedBox(height: 24),
-              // Slider: Доходы и расходы | Sales | Services
               SizedBox(
                 height: 225,
                 child: PageView(
@@ -140,15 +143,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: _buildIncomeExpensesSlide(),
+                      child: _buildIncomeExpensesSlide(locale),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: _buildSalesSlide(),
+                      child: _buildSalesSlide(locale),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: _buildServicesSlide(),
+                      child: _buildServicesSlide(locale),
                     ),
                   ],
                 ),
@@ -185,19 +188,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
         ),
       ),
+        );
+      },
     );
   }
 
-  Widget _buildIncomeExpensesSlide() {
+  Widget _buildIncomeExpensesSlide(LocaleProvider locale) {
     return SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
-      child: _buildIncomeExpensesCard(),
+      child: _buildIncomeExpensesCard(locale),
     );
   }
 
-  Widget _buildSalesSlide() {
+  Widget _buildSalesSlide(LocaleProvider locale) {
     return _buildSlideCard(
-      title: 'Sales',
+      title: locale.t('analytics.sales'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
@@ -206,7 +211,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             children: [
               Expanded(
                 child: _buildAnalyticsMiniCard(
-                  title: 'Visits',
+                  title: locale.t('analytics.visits'),
                   value: '$_totalVisits',
                   icon: Icons.people_outline,
                   iconBg: AppColors.analyticsTealLight,
@@ -216,7 +221,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildAnalyticsMiniCard(
-                  title: 'Average',
+                  title: locale.t('analytics.average'),
                   value: formatVnd(_averageClientCheck),
                   icon: Icons.receipt_long_outlined,
                   iconBg: AppColors.analyticsTealLight,
@@ -227,7 +232,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
           const SizedBox(height: 12),
           _buildAnalyticsMiniCard(
-            title: 'Total sales',
+            title: locale.t('analytics.totalSales'),
             value: formatVnd(_totalSales),
             fullWidth: true,
             icon: Icons.trending_up,
@@ -239,15 +244,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildServicesSlide() {
+  Widget _buildServicesSlide(LocaleProvider locale) {
     return _buildSlideCard(
-      title: 'Services',
+      title: locale.t('analytics.services'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildAnalyticsMiniCard(
-            title: 'Total services',
+            title: locale.t('analytics.totalServices'),
             value: '$_totalServices',
             fullWidth: true,
             icon: Icons.miscellaneous_services_outlined,
@@ -256,7 +261,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ),
           const SizedBox(height: 12),
           _buildAnalyticsMiniCard(
-            title: 'Most popular service',
+            title: locale.t('analytics.mostPopularService'),
             value: _mostPopularService,
             fullWidth: true,
             icon: Icons.star_outline,
@@ -359,7 +364,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildClientsCard() {
+  Widget _buildClientsCard(LocaleProvider locale) {
     final total = _totalClients;
     final regular = _regularCount;
     final newCount = _newCount;
@@ -384,9 +389,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Клиенты',
-            style: TextStyle(
+          Text(
+            locale.t('analytics.clients'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
@@ -397,7 +402,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Все клиенты',
+                locale.t('analytics.allClients'),
                 style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
               ),
               Text(
@@ -451,18 +456,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             children: [
               _buildLegendDot(
                 AppColors.analyticsPurpleLight,
-                'Регулярные',
-                '2+ визитов за 3 мес.',
+                locale.t('analytics.regular'),
+                locale.t('analytics.regularHint'),
               ),
               _buildLegendDot(
                 AppColors.analyticsTealLight,
-                'Новые',
-                'За выбранный период',
+                locale.t('analytics.new'),
+                locale.t('analytics.inPeriod'),
               ),
               _buildLegendDot(
                 AppColors.analyticsSleepersRed.withValues(alpha: 0.5),
-                'Спящие',
-                'Без визитов 3 мес.',
+                locale.t('analytics.sleepers'),
+                locale.t('analytics.noVisits3Months'),
               ),
             ],
           ),
@@ -489,7 +494,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildIncomeExpensesCard() {
+  Widget _buildIncomeExpensesCard(LocaleProvider locale) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -506,9 +511,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Доходы и расходы',
-            style: TextStyle(
+          Text(
+            locale.t('analytics.incomeAndExpenses'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
@@ -522,7 +527,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   iconBg: AppColors.analyticsTealLight,
                   icon: Icons.trending_up,
                   iconColor: AppColors.analyticsTeal,
-                  title: 'Доходы',
+                  title: locale.t('analytics.income'),
                   value: _income,
                   onTap: () {},
                 ),
@@ -535,7 +540,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                   icon: Icons.trending_down,
                   iconColor: AppColors.analyticsExpensesOrange,
-                  title: 'Расходы',
+                  title: locale.t('analytics.expenses'),
                   value: _expenses,
                   onTap: () {},
                 ),
@@ -548,7 +553,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             icon: Icons.account_balance_wallet_outlined,
             iconColor: AppColors.analyticsPurple,
             useOutline: false,
-            title: 'Чистая прибыль',
+            title: locale.t('analytics.netProfit'),
             value: _netProfit,
             onTap: () {},
           ),

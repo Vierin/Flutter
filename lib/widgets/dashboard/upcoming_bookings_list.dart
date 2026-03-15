@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
+import '../../l10n/locale_provider.dart';
 import '../../models/booking.dart';
 
 class UpcomingBookingsList extends StatefulWidget {
@@ -80,34 +82,36 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          widget.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                : Consumer<LocaleProvider>(
+                    builder: (context, locale, _) => Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.title,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ),
-                      ),
-                      if (widget.onViewAll != null)
-                        IconButton(
-                          onPressed: widget.onViewAll,
-                          icon: const Icon(
-                            Icons.launch,
-                            size: 20,
-                            color: AppColors.primary500,
-                          ),
-                          tooltip: 'Все записи',
+                        if (widget.onViewAll != null)
+                          IconButton(
+                            onPressed: widget.onViewAll,
+                            icon: const Icon(
+                              Icons.launch,
+                              size: 20,
+                              color: AppColors.primary500,
+                            ),
+                            tooltip: locale.t('dashboard.allBookings'),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
                             minWidth: 36,
                             minHeight: 36,
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
           ),
           // Content
@@ -121,13 +125,15 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
                   children: [
                     const Text('📅', style: TextStyle(fontSize: 20)),
                     const SizedBox(height: 8),
-                    Text(
-                      widget.title == 'Today bookings'
-                          ? 'Нет записей на сегодня'
-                          : 'No upcoming bookings',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
+                    Consumer<LocaleProvider>(
+                      builder: (context, locale, _) => Text(
+                        widget.title == 'Today bookings'
+                            ? locale.t('dashboard.noBookingsToday')
+                            : locale.t('dashboard.noUpcomingBookings'),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ],

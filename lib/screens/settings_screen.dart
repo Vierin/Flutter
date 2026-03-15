@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
+import '../../l10n/locale_provider.dart';
 import '../../models/salon.dart';
 import '../../services/auth_service.dart';
 import '../../services/cache/salon_cache.dart';
@@ -159,7 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
       _fillSalonFromData();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(hadSalon ? 'Салон обновлён' : 'Салон создан')),
+        SnackBar(content: Text(hadSalon ? context.read<LocaleProvider>().t('profileForm.salonUpdated') : context.read<LocaleProvider>().t('profileForm.salonCreated'))),
       );
     } catch (e) {
       if (!mounted) return;
@@ -186,7 +187,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.error ?? 'Ошибка обновления профиля')),
+        SnackBar(content: Text(result.error ?? context.read<LocaleProvider>().t('profileForm.updateError'))),
       );
     }
   }
@@ -196,7 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final newPwd = _newPasswordController.text;
     if (newPwd != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пароли не совпадают')),
+        SnackBar(content: Text(context.read<LocaleProvider>().t('profileForm.passwordsDontMatch'))),
       );
       return;
     }
@@ -217,7 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     if (result.success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пароль изменён')),
+        SnackBar(content: Text(context.read<LocaleProvider>().t('profileForm.passwordChanged'))),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -234,7 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       Navigator.of(context).popUntil((route) => route.isFirst);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.error ?? 'Не удалось удалить аккаунт')),
+        SnackBar(content: Text(result.error ?? context.read<LocaleProvider>().t('profileForm.deleteAccountError'))),
       );
     }
   }
@@ -277,14 +278,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Удалить аккаунт'),
-        content: const Text(
-          'Вы уверены, что хотите удалить аккаунт? Это действие необратимо. Все данные будут удалены безвозвратно.',
-        ),
+        title: Text(context.read<LocaleProvider>().t('profileForm.deleteAccount')),
+        content: Text(context.read<LocaleProvider>().t('profileForm.deleteAccountConfirm')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Отмена'),
+            child: Text(context.read<LocaleProvider>().t('common.cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -292,7 +291,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _deleteAccount();
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.error600),
-            child: const Text('Удалить аккаунт'),
+            child: Text(context.read<LocaleProvider>().t('profileForm.deleteAccount')),
           ),
         ],
       ),
@@ -304,13 +303,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final auth = context.watch<AuthService>();
     final user = auth.user;
 
-    const pageBg = Color(0xFFF8F9FA);
-    const maxContentWidth = 680.0;
+    return Consumer<LocaleProvider>(
+      builder: (context, locale, _) {
+        const pageBg = Color(0xFFF8F9FA);
+        const maxContentWidth = 680.0;
 
-    return Scaffold(
+        return Scaffold(
       backgroundColor: pageBg,
       appBar: AppBar(
-        title: const Text('Настройки'),
+        title: Text(locale.t('profileForm.settings')),
         backgroundColor: AppColors.backgroundPrimary,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
@@ -323,11 +324,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(24),
                   children: [
-                    // Заголовок блока «Настройки профиля»
-                    const Center(
+                    Center(
                       child: Text(
-                        'Настройки профиля',
-                        style: TextStyle(
+                        locale.t('profileForm.profileSettings'),
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -336,7 +336,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Укажите детали о вашем салоне, включая название, описание, адрес, контактную информацию, фотографии и часы работы.',
+                      locale.t('profileForm.salonDescriptionHint'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
@@ -349,7 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     // Секции салона в одной форме
                     _salonLoading
                         ? _SectionCard(
-                            title: 'Основная информация',
+                            title: locale.t('profileForm.mainInfo'),
                             child: const Padding(
                               padding: EdgeInsets.symmetric(vertical: 24),
                               child: Center(child: CircularProgressIndicator()),
@@ -361,32 +361,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 _SectionCard(
-                                  title: 'Основная информация',
+                                  title: locale.t('profileForm.mainInfo'),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       _labeledField(
-                                        label: 'Название салона',
+                                        label: locale.t('profileForm.salonName'),
                                         child: TextFormField(
                                           controller: _salonNameController,
-                                          decoration: _inputDecoration(hint: 'Введите название'),
+                                          decoration: _inputDecoration(hint: locale.t('profileForm.enterSalonName')),
                                           textCapitalization: TextCapitalization.words,
                                           validator: (v) =>
-                                              (v == null || v.trim().isEmpty) ? 'Обязательное поле' : null,
+                                              (v == null || v.trim().isEmpty) ? locale.t('profileForm.requiredField') : null,
                                         ),
                                       ),
                                       const SizedBox(height: 16),
                                       _labeledField(
-                                        label: 'Описание',
+                                        label: locale.t('profileForm.description'),
                                         child: TextFormField(
                                           controller: _salonDescriptionController,
-                                          decoration: _inputDecoration(hint: 'Опишите ваш салон', alignLabelWithHint: true),
+                                          decoration: _inputDecoration(hint: locale.t('profileForm.enterDescription'), alignLabelWithHint: true),
                                           maxLines: 4,
                                         ),
                                       ),
                                       const SizedBox(height: 16),
                                       _labeledField(
-                                        label: 'Адрес',
+                                        label: locale.t('profileForm.address'),
                                         child: InkWell(
                                           onTap: () async {
                                             await AddressPickerModal.show(
@@ -405,7 +405,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           },
                                           borderRadius: BorderRadius.circular(10),
                                           child: InputDecorator(
-                                            decoration: _inputDecoration(hint: 'Введите адрес').copyWith(
+                                            decoration: _inputDecoration(hint: locale.t('profileForm.enterAddress')).copyWith(
                                               suffixIcon: Icon(Icons.location_on_outlined, size: 20, color: AppColors.textSecondary),
                                             ),
                                             child: Text(
@@ -439,7 +439,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                                     color: Colors.white,
                                                   ),
                                                 )
-                                              : Text(_salon == null ? 'Добавить салон' : 'Сохранить'),
+                                              : Text(_salon == null ? locale.t('profileForm.addSalon') : locale.t('common.save')),
                                         ),
                                       ),
                                     ],
@@ -447,30 +447,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 const SizedBox(height: 24),
                                 _SectionCard(
-                            title: 'Контактная информация',
+                            title: locale.t('profileForm.contactInfo'),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 _labeledField(
-                                  label: 'Телефон салона',
+                                  label: locale.t('profileForm.salonPhone'),
                                   child: TextFormField(
                                     controller: _salonPhoneController,
-                                    decoration: _inputDecoration(hint: 'Введите телефон'),
+                                    decoration: _inputDecoration(hint: locale.t('profileForm.enterPhone')),
                                     keyboardType: TextInputType.phone,
                                   ),
                                 ),
                                 const SizedBox(height: 16),
                                 _labeledField(
-                                  label: 'Email салона',
+                                  label: locale.t('profileForm.salonEmail'),
                                   child: TextFormField(
                                     controller: _salonEmailController,
-                                    decoration: _inputDecoration(hint: 'Введите email'),
+                                    decoration: _inputDecoration(hint: locale.t('profileForm.enterEmail')),
                                     keyboardType: TextInputType.emailAddress,
                                   ),
                                 ),
                                 const SizedBox(height: 16),
                                 _labeledField(
-                                  label: 'Сайт',
+                                  label: locale.t('profileForm.website'),
                                   child: TextFormField(
                                     controller: _salonWebsiteController,
                                     decoration: _inputDecoration(hint: 'https://'),
@@ -479,7 +479,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 const SizedBox(height: 16),
                                 _labeledField(
-                                  label: 'Instagram',
+                                  label: locale.t('profileForm.instagram'),
                                   child: TextFormField(
                                     controller: _salonInstagramController,
                                     decoration: _inputDecoration(hint: '@username'),
@@ -493,9 +493,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                     const SizedBox(height: 24),
 
-                // Настройки аккаунта
                 Text(
-                  'Настройки аккаунта',
+                  locale.t('profileForm.accountSettings'),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -504,9 +503,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Персональная информация
                 _SectionCard(
-                  title: 'Персональные данные',
+                  title: locale.t('profileForm.personalData'),
                   child: Form(
                     key: _profileFormKey,
                     child: Column(
@@ -514,10 +512,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         TextFormField(
                           controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Имя',
-                            hintText: 'Введите имя',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: locale.t('profileForm.name'),
+                            hintText: locale.t('profileForm.enterName'),
+                            border: const OutlineInputBorder(),
                           ),
                           textCapitalization: TextCapitalization.words,
                         ),
@@ -526,16 +524,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           key: ValueKey('email_${user.email}'),
                           initialValue: user.email,
                           readOnly: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: locale.t('profileForm.email'),
+                            border: const OutlineInputBorder(),
                             filled: true,
                             fillColor: AppColors.backgroundTertiary,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Email нельзя изменить.',
+                          locale.t('profileForm.emailReadOnlyHint'),
                           style: TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,
@@ -544,10 +542,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _phoneController,
-                          decoration: const InputDecoration(
-                            labelText: 'Телефон',
-                            hintText: 'Введите телефон',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: locale.t('profileForm.phone'),
+                            hintText: locale.t('profileForm.enterPhone'),
+                            border: const OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.phone,
                         ),
@@ -565,7 +563,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     width: 22,
                                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                   )
-                                : const Text('Сохранить'),
+                                : Text(locale.t('common.save')),
                           ),
                         ),
                       ],
@@ -574,9 +572,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Безопасность — смена пароля
                 _SectionCard(
-                  title: 'Безопасность',
+                  title: locale.t('profileForm.security'),
                   child: Form(
                     key: _passwordFormKey,
                     child: Column(
@@ -585,14 +582,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         TextFormField(
                           controller: _newPasswordController,
                           obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Новый пароль',
-                            hintText: 'Минимум 8 символов',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: locale.t('profileForm.newPassword'),
+                            hintText: locale.t('profileForm.passwordMin8'),
+                            border: const OutlineInputBorder(),
                           ),
                           validator: (v) {
                             if (v != null && v.isNotEmpty && v.length < 8) {
-                              return 'Не менее 8 символов';
+                              return locale.t('profileForm.passwordMin8');
                             }
                             return null;
                           },
@@ -601,14 +598,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Подтвердите пароль',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: locale.t('profileForm.confirmPassword'),
+                            border: const OutlineInputBorder(),
                           ),
                           validator: (v) {
                             if (_newPasswordController.text.isNotEmpty &&
                                 v != _newPasswordController.text) {
-                              return 'Пароли не совпадают';
+                              return locale.t('profileForm.passwordsDontMatch');
                             }
                             return null;
                           },
@@ -627,7 +624,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     width: 22,
                                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                   )
-                                : const Text('Сменить пароль'),
+                                : Text(locale.t('profileForm.changePassword')),
                           ),
                         ),
                       ],
@@ -636,15 +633,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Опасная зона
                 _SectionCard(
-                  title: 'Опасная зона',
+                  title: locale.t('profileForm.dangerZone'),
                   titleColor: AppColors.error600,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'После удаления аккаунта восстановление невозможно. Все данные будут удалены.',
+                        locale.t('profileForm.deleteWarning'),
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
@@ -654,7 +650,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       OutlinedButton.icon(
                         onPressed: _showDeleteAccountDialog,
                         icon: const Icon(Icons.delete_forever, size: 20),
-                        label: const Text('Удалить аккаунт'),
+                        label: Text(locale.t('profileForm.deleteAccount')),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.error600,
                           side: const BorderSide(color: AppColors.error600),
@@ -665,11 +661,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Выход
                 OutlinedButton.icon(
                   onPressed: () => auth.logout(),
                   icon: const Icon(Icons.logout),
-                  label: const Text('Выйти'),
+                  label: Text(locale.t('profileForm.logout')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary500,
                     side: const BorderSide(color: AppColors.primary500),
@@ -680,6 +675,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
         ),
+        );
+      },
     );
   }
 }

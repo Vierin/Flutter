@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
+import '../../l10n/locale_provider.dart';
 import '../../models/booking.dart';
 import '../../models/salon.dart';
 import '../../models/staff_member.dart';
@@ -11,8 +12,6 @@ import '../../services/cache/bookings_cache.dart';
 import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../services/staff_api_service.dart';
-import '../../models/service_item.dart';
-import '../../services/services_api_service.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 import 'work_schedule_screen.dart';
@@ -37,21 +36,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   bool _expandedView = false;
   late PageController _dayStripPageController;
 
-  static const _monthNamesFull = [
-    'Январь',
-    'Февраль',
-    'Март',
-    'Апрель',
-    'Май',
-    'Июнь',
-    'Июль',
-    'Август',
-    'Сентябрь',
-    'Октябрь',
-    'Ноябрь',
-    'Декабрь',
-  ];
-  static const _weekDaysShort = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
   static const _dayStripTotalWeeks = 208;
 
   @override
@@ -141,7 +125,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('${context.read<LocaleProvider>().t('calendar.error')}: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -311,9 +298,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (!mounted) return;
       if (ok) {
         await _loadData();
+        if (!mounted) return;
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Бронирование подтверждено'),
+          SnackBar(
+            content: Text(context.read<LocaleProvider>().t('calendar.bookingConfirmed')),
             backgroundColor: Colors.green,
           ),
         );
@@ -321,7 +309,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('${context.read<LocaleProvider>().t('calendar.error')}: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -334,9 +325,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (!mounted) return;
       if (ok) {
         await _loadData();
+        if (!mounted) return;
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Бронирование отклонено'),
+          SnackBar(
+            content: Text(context.read<LocaleProvider>().t('calendar.bookingRejected')),
             backgroundColor: Colors.orange,
           ),
         );
@@ -357,9 +349,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (!mounted) return;
       if (ok) {
         await _loadData();
+        if (!mounted) return;
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Запись отменена'),
+          SnackBar(
+            content: Text(context.read<LocaleProvider>().t('calendar.bookingCancelled')),
             backgroundColor: Colors.orange,
           ),
         );
@@ -391,8 +384,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final token = context.read<AuthService>().accessToken;
     if (token == null) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        const SnackBar(
-          content: Text('Нет доступа'),
+        SnackBar(
+          content: Text(context.read<LocaleProvider>().t('calendar.noAccess')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -410,17 +403,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _showCalendarActionsModal() {
+    final locale = context.read<LocaleProvider>();
+    final staffLabel = locale.t('calendar.staffMember');
     final staffName = _selectedStaffId != null
         ? (_staffMembers
                   .where((s) => s.id == _selectedStaffId)
                   .firstOrNull
                   ?.name ??
-              'сотрудника')
-        : 'сотрудника';
+              staffLabel)
+        : staffLabel;
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
+      builder: (ctx) => Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         decoration: BoxDecoration(
           color: AppColors.backgroundPrimary,
@@ -441,12 +436,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _calendarActionOption(
-                  label: 'Изменить расписание',
+                  label: locale.t('calendar.editSchedule'),
                   icon: Icons.calendar_month_outlined,
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(ctx);
                     Navigator.push(
-                      context,
+                      ctx,
                       MaterialPageRoute(
                         builder: (_) => const WorkScheduleScreen(),
                       ),
@@ -455,38 +450,36 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
                 const SizedBox(height: 12),
                 _calendarActionOption(
-                  label: 'Добавить нерабочие часы для $staffName',
+                  label: '${locale.t('calendar.addUnavailable')} $staffName',
                   icon: Icons.schedule_outlined,
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(ctx);
                     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
                       SnackBar(
-                        content: Text(
-                          'Нерабочие часы для $staffName в разработке',
-                        ),
+                        content: Text(locale.t('calendar.unavailableComingSoon')),
                       ),
                     );
                   },
                 ),
                 const SizedBox(height: 12),
                 _calendarActionOption(
-                  label: 'Сделать весь день нерабочим',
+                  label: locale.t('calendar.makeDayOff'),
                   icon: Icons.event_busy_outlined,
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(ctx);
                     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                      const SnackBar(
-                        content: Text('Блокировка дня в разработке'),
+                      SnackBar(
+                        content: Text(locale.t('calendar.blockComingSoon')),
                       ),
                     );
                   },
                 ),
                 const SizedBox(height: 12),
                 _calendarActionOption(
-                  label: 'Новая запись',
+                  label: locale.t('calendar.newBooking'),
                   icon: Icons.add_circle_outline,
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(ctx);
                     _onNewAppointment();
                   },
                 ),
@@ -537,27 +530,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_salon == null && !_isLoading) {
-      return Scaffold(
-        backgroundColor: AppColors.backgroundSecondary,
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                'Сначала настройте салон',
-                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+    return Consumer<LocaleProvider>(
+      builder: (context, locale, _) {
+        if (_salon == null && !_isLoading) {
+          return Scaffold(
+            backgroundColor: AppColors.backgroundSecondary,
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    locale.t('calendar.setupSalonFirst'),
+                    style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      );
-    }
+          );
+        }
 
-    final displayDate = _expandedView ? _selectedDate : _displayWeekStart;
-    final monthYear =
-        '${_monthNamesFull[displayDate.month - 1]} ${displayDate.year}';
-    return Scaffold(
+        final monthNames = locale.tList('calendar.months');
+        final weekDays = locale.tList('calendar.weekDays');
+        final displayDate = _expandedView ? _selectedDate : _displayWeekStart;
+        final monthYear = monthNames.isNotEmpty
+            ? '${monthNames[displayDate.month - 1]} ${displayDate.year}'
+            : '${displayDate.month} ${displayDate.year}';
+        return Scaffold(
       backgroundColor: AppColors.backgroundSecondary,
       body: SafeArea(
         child: RefreshIndicator(
@@ -590,7 +588,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 _headerPill(
-                                  label: 'Сегодня',
+                                  label: locale.t('calendar.today'),
                                   selected: _isToday(_selectedDate),
                                   onTap: () {
                                     final now = DateTime.now();
@@ -614,8 +612,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 const SizedBox(width: 8),
                                 _headerPill(
                                   label: _expandedView
-                                      ? 'Свернуть'
-                                      : 'Развернуть',
+                                      ? locale.t('calendar.collapse')
+                                      : locale.t('calendar.expand'),
                                   selected: _expandedView,
                                   onTap: () => setState(
                                     () => _expandedView = !_expandedView,
@@ -647,11 +645,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 constraints: const BoxConstraints(maxHeight: 320),
                                 child: SingleChildScrollView(
                                   padding: const EdgeInsets.all(12),
-                                  child: _buildMonthGrid(),
+                                  child: _buildMonthGrid(weekDays),
                                 ),
                               ),
                             )
-                          : _buildDayStrip(),
+                          : _buildDayStrip(weekDays),
                       if (!_expandedView) ...[
                         const SizedBox(height: 16),
                         _buildStaffPills(),
@@ -665,7 +663,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 hasScrollBody: false,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 100),
-                  child: _buildTimeGrid(),
+                  child: _buildTimeGrid(locale),
                 ),
               ),
             ],
@@ -681,10 +679,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
           size: 28,
         ),
       ),
+        );
+      },
     );
   }
 
-  Widget _buildMonthGrid() {
+  Widget _buildMonthGrid(List<String> weekDays) {
     final year = _selectedDate.year;
     final month = _selectedDate.month;
     final firstDay = DateTime(year, month, 1);
@@ -701,11 +701,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
         Row(
           children: List.generate(7, (i) {
             final idx = (i + 1) % 7;
+            final label = weekDays.length > idx ? weekDays[idx] : '$idx';
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
                 child: Text(
-                  _weekDaysShort[idx],
+                  label,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
@@ -843,7 +844,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildDayStrip() {
+  Widget _buildDayStrip(List<String> weekDays) {
     return SizedBox(
       height: 84,
       child: PageView.builder(
@@ -896,7 +897,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              _weekDaysShort[d.weekday % 7],
+                              weekDays.length > d.weekday % 7
+                                  ? weekDays[d.weekday % 7]
+                                  : '${d.weekday}',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
@@ -993,7 +996,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildTimeGrid() {
+  Widget _buildTimeGrid(LocaleProvider locale) {
     final range = _getGlobalTimeRange();
     final startHour = range.startHour;
     final endHour = range.endHour;
@@ -1077,7 +1080,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                   painter: _DiagonalStripesPainter(),
                                   child: Center(
                                     child: Text(
-                                      _timeBlockLabel(timeBlock.type),
+                                      _timeBlockLabel(timeBlock.type, locale),
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
@@ -1178,14 +1181,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  String _timeBlockLabel(TimeBlockType type) {
+  String _timeBlockLabel(TimeBlockType type, LocaleProvider locale) {
     switch (type) {
       case TimeBlockType.timeOff:
-        return 'Выходной';
+        return locale.t('calendar.dayOff');
       case TimeBlockType.busy:
-        return 'Занят';
+        return locale.t('calendar.busy');
       case TimeBlockType.closure:
-        return 'Закрыто';
+        return locale.t('calendar.closed');
     }
   }
 }

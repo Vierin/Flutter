@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
+import '../../l10n/locale_provider.dart';
 import '../../models/booking.dart';
 import '../../utils/currency_format.dart';
 import '../../models/service_item.dart';
@@ -899,7 +900,7 @@ class _NewBookingModalState extends State<NewBookingModal> {
               ),
               child: _isSubmitting
                   ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : Text(widget.isEditMode ? 'Сохранить' : 'Записаться'),
+                  : Text(widget.isEditMode ? context.read<LocaleProvider>().t('common.save') : context.read<LocaleProvider>().t('booking.book')),
             ),
           ),
         ],

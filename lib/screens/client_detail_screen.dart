@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
+import '../../l10n/locale_provider.dart';
 import '../../utils/currency_format.dart';
 import '../../models/booking.dart';
 import '../../services/auth_service.dart';
@@ -279,12 +280,12 @@ class _ClientDetailScreenState extends State<ClientDetailScreen> {
                     ),
                     const SizedBox(height: 12),
                     if (_bookings.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 24),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
                         child: Center(
                           child: Text(
-                            'Нет записей',
-                            style: TextStyle(color: AppColors.textSecondary),
+                            context.watch<LocaleProvider>().t('booking.noBookings'),
+                            style: const TextStyle(color: AppColors.textSecondary),
                           ),
                         ),
                       )

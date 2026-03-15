@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../constants/colors.dart';
 import '../l10n/locale_provider.dart';
 import '../services/auth_service.dart';
+import '../widgets/language_selector_modal.dart';
 import '../utils/show_api_error.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -101,12 +102,20 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  static const Map<String, String> _languageLabels = {
+    'en': 'English',
+    'ru': 'Русский',
+    'vi': 'Tiếng Việt',
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
+        child: Stack(
+          children: [
+            Center(
+              child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Form(
               key: _formKey,
@@ -268,6 +277,36 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+          ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Consumer<LocaleProvider>(
+                builder: (context, locale, _) => InkWell(
+                  onTap: () => showLanguageSelectorModal(context, locale),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.language, size: 22, color: AppColors.textSecondary),
+                        const SizedBox(width: 6),
+                        Text(
+                          _languageLabels[locale.localeCode] ?? locale.localeCode.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
-import '../l10n/app_locales.dart';
 import '../l10n/locale_provider.dart';
 import '../services/auth_service.dart';
+import '../widgets/language_selector_modal.dart';
 import '../services/push_notification_service.dart';
 
 class AppSettingsScreen extends StatelessWidget {
@@ -58,7 +58,19 @@ class AppSettingsScreen extends StatelessWidget {
                         locale,
                         icon: Icons.language,
                         title: locale.t('settings.changeLanguage'),
-                        onTap: () => _showLanguageDialog(context, locale),
+                        onTap: () => showLanguageSelectorModal(
+                        context,
+                        locale,
+                        onLocaleSelected: (code) {
+                          final token = context.read<AuthService>().accessToken;
+                          if (token != null && token.isNotEmpty) {
+                            PushNotificationService.registerToken(
+                              accessToken: token,
+                              language: code,
+                            );
+                          }
+                        },
+                      ),
                       ),
                       const SizedBox(height: 8),
                       _buildListTile(
@@ -101,39 +113,6 @@ class AppSettingsScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  static void _showLanguageDialog(BuildContext context, LocaleProvider locale) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(locale.t('settings.changeLanguage')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: supportedLocaleCodes.map((code) {
-            final label = code == 'en'
-                ? locale.t('settings.languageEn')
-                : code == 'ru'
-                    ? locale.t('settings.languageRu')
-                    : locale.t('settings.languageVi');
-            return ListTile(
-              title: Text(label),
-              onTap: () async {
-                await locale.setLocale(code);
-                if (ctx.mounted) Navigator.of(ctx).pop();
-                final token = context.read<AuthService>().accessToken;
-                if (token != null && token.isNotEmpty) {
-                  PushNotificationService.registerToken(
-                    accessToken: token,
-                    language: code,
-                  );
-                }
-              },
-            );
-          }).toList(),
-        ),
-      ),
     );
   }
 

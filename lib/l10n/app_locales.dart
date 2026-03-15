@@ -2,4 +2,4 @@
 const List<String> supportedLocaleCodes = ['en', 'ru', 'vi'];
 
 /// Default locale when none saved.
-const String defaultLocaleCode = 'ru';
+const String defaultLocaleCode = 'en';
