@@ -50,10 +50,13 @@ class MainShellState extends State<MainShell> {
     if (mounted) {
       setState(() => _salonLoading = false);
       final locale = context.read<LocaleProvider>();
-      PushNotificationService.registerToken(
-        accessToken: token,
-        language: locale.localeCode,
-      );
+      await PushNotificationService.requestNotificationPermission();
+      if (mounted) {
+        PushNotificationService.registerToken(
+          accessToken: token,
+          language: locale.localeCode,
+        );
+      }
     }
   }
 
