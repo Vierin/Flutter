@@ -69,12 +69,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               const Text(
                 'Аналитика',
                 style: TextStyle(
-                  fontSize: 24, 
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
-              centerTitle: true,
               const SizedBox(height: 16),
               // Period picker
               Row(

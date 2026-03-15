@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/booking.dart';
 import '../models/salon.dart';
+import '../models/subscription.dart';
 import '../models/time_block.dart';
 
 class DashboardApiService {
@@ -88,6 +89,36 @@ class DashboardApiService {
     final data = json.decode(response.body);
     if (data is! Map<String, dynamic>) throw Exception('Invalid response');
     return Salon.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  /// GET /subscriptions/current — текущая подписка владельца.
+  static Future<Subscription?> getCurrentSubscription(String accessToken) async {
+    final url = Uri.parse('$_baseUrl/subscriptions/current');
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer $accessToken',
+        },
+      );
+      if (kDebugMode) {
+        debugPrint('[DashboardAPI] GET /subscriptions/current status=${response.statusCode}');
+      }
+      if (response.statusCode != 200) return null;
+      final body = json.decode(response.body);
+      if (body is Map<String, dynamic>) {
+        final data = body['data'];
+        if (data is Map<String, dynamic>) {
+          return Subscription.fromJson(Map<String, dynamic>.from(data));
+        }
+        return Subscription.fromJson(body);
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) debugPrint('[DashboardAPI] getCurrentSubscription error: $e');
+      return null;
+    }
   }
 
   /// GET /bookings/owner — бронирования владельца.

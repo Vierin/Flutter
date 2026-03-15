@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../constants/colors.dart';
+import '../models/subscription.dart';
 import '../services/auth_service.dart';
 import '../services/cache/salon_cache.dart';
 import '../services/cache/services_staff_cache.dart';
@@ -26,17 +28,46 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Placeholder: дата истечения подписки
-  static const _expiredDate = '31.12.2025';
-
   int _staffCount = 0;
   int _servicesCount = 0;
   bool _loadingCounts = true;
+  Subscription? _subscription;
+  bool _loadingSubscription = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadCounts());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCounts();
+      _loadSubscription();
+    });
+  }
+
+  Future<void> _loadSubscription() async {
+    final token = context.read<AuthService>().accessToken;
+    if (token == null || token.isEmpty) {
+      if (mounted) setState(() => _loadingSubscription = false);
+      return;
+    }
+    try {
+      final sub = await DashboardApiService.getCurrentSubscription(token);
+      if (mounted) setState(() {
+        _subscription = sub;
+        _loadingSubscription = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingSubscription = false);
+    }
+  }
+
+  static String _formatDate(String? isoDate) {
+    if (isoDate == null || isoDate.isEmpty) return '—';
+    try {
+      final d = DateTime.parse(isoDate);
+      return DateFormat('dd.MM.yyyy').format(d);
+    } catch (_) {
+      return isoDate;
+    }
   }
 
   Future<void> _loadCounts() async {
@@ -98,20 +129,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildCurrentSubscriptionCard() {
+    final sub = _subscription;
+    final isActive = sub?.isActive ?? false;
+    final borderColor = isActive ? AppColors.primary500 : AppColors.error500;
+    final statusColor = isActive ? AppColors.primary500 : AppColors.error500;
+
+    String statusText;
+    if (_loadingSubscription) {
+      statusText = 'Загрузка...';
+    } else if (sub == null) {
+      statusText = 'Нет активной подписки';
+    } else if (sub.isActive) {
+      final end = sub.endDate ?? sub.nextPaymentDate ?? sub.trialEndDate;
+      statusText = end != null && end.isNotEmpty
+          ? 'Активна до ${_formatDate(end)}'
+          : 'Активна';
+    } else if (sub.isExpired) {
+      statusText = sub.endDate != null && sub.endDate!.isNotEmpty
+          ? 'Истекла ${_formatDate(sub.endDate)}'
+          : 'Истекла';
+    } else if (sub.isCancelled) {
+      final end = sub.endDate ?? sub.nextPaymentDate;
+      statusText = end != null && end.isNotEmpty
+          ? 'Отменена, действительна до ${_formatDate(end)}'
+          : 'Отменена';
+    } else {
+      statusText = 'Неактивна';
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-        ),
+        ).then((_) {
+          if (mounted) _loadSubscription();
+        }),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.backgroundPrimary,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.error500, width: 2),
+            border: Border.all(color: borderColor, width: 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.06),
@@ -136,11 +197,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Истекла $_expiredDate',
-                      style: const TextStyle(
+                      statusText,
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.error500,
+                        color: _loadingSubscription
+                            ? AppColors.textSecondary
+                            : statusColor,
                       ),
                     ),
                   ],

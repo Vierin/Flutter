@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/salon_cache.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'calendar_screen.dart';
@@ -23,8 +24,29 @@ class MainShell extends StatefulWidget {
 /// Состояние MainShell — можно использовать для навигации на экраны первой вкладки с сохранением нижней панели.
 class MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  bool _salonLoading = true;
   final GlobalKey<NavigatorState> _homeNavigatorKey =
       GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSalon());
+  }
+
+  Future<void> _loadSalon() async {
+    final token = context.read<AuthService>().accessToken;
+    if (token == null || token.isEmpty) {
+      if (mounted) setState(() => _salonLoading = false);
+      return;
+    }
+    try {
+      await context.read<SalonCache>().getSalon(token);
+    } catch (_) {
+      // показываем интерфейс даже при ошибке — пользователь увидит контент или ошибки на экранах
+    }
+    if (mounted) setState(() => _salonLoading = false);
+  }
 
   /// Переключиться на первую вкладку и открыть маршрут (например /staff, /services).
   void navigateToTab0Route(String routeName) {
@@ -85,7 +107,12 @@ class MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: Stack(
+        children: [
+          IndexedStack(index: _currentIndex, children: _screens),
+          if (_salonLoading) const _SalonLoadingCurtain(),
+        ],
+      ),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Container(
@@ -210,6 +237,49 @@ class _NavItem extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Занавес при загрузке данных салона: логотип и подпись «Подгружаем данные».
+class _SalonLoadingCurtain extends StatelessWidget {
+  const _SalonLoadingCurtain();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Material(
+        color: AppColors.backgroundPrimary,
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/logo.png',
+                  height: 80,
+                  width: 160,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.store,
+                    size: 80,
+                    color: AppColors.primary500,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Подгружаем данные',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
