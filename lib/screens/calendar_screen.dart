@@ -13,6 +13,7 @@ import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../services/staff_api_service.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
+import '../../utils/show_api_error.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 import 'work_schedule_screen.dart';
 
@@ -124,23 +125,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            content: Text('${context.read<LocaleProvider>().t('calendar.error')}: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showApiError(context, e);
       }
     }
   }
 
+  /// Бронирования на день (по локальной дате). Учитывает timezone: сравниваем в local.
   List<Booking> _bookingsForDate(DateTime date) {
     final start = DateTime(date.year, date.month, date.day);
     final end = start.add(const Duration(days: 1));
-    return _bookings
-        .where((b) => !b.dateTime.isBefore(start) && b.dateTime.isBefore(end))
-        .toList()
-      ..sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    return _bookings.where((b) {
+      final local = b.dateTime.isUtc ? b.dateTime.toLocal() : b.dateTime;
+      return !local.isBefore(start) && local.isBefore(end);
+    }).toList()
+      ..sort((a, b) {
+        final la = a.dateTime.isUtc ? a.dateTime.toLocal() : a.dateTime;
+        final lb = b.dateTime.isUtc ? b.dateTime.toLocal() : b.dateTime;
+        return la.compareTo(lb);
+      });
   }
 
   List<Booking> _bookingsForDateAndStaff(DateTime date, String? staffId) {
@@ -151,9 +153,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return list;
   }
 
-  Booking? _bookingAtHour(List<Booking> dayBookings, int hour) {
+  /// Бронирование для строки часа (по локальному времени). Показываем, если бронь пересекает этот час.
+  Booking? _bookingAtHour(DateTime forDate, List<Booking> dayBookings, int hour) {
+    final slotStart = DateTime(forDate.year, forDate.month, forDate.day, hour, 0);
+    final slotEnd = slotStart.add(const Duration(hours: 1));
     for (final b in dayBookings) {
-      if (b.dateTime.hour == hour) return b;
+      final local = b.dateTime.isUtc ? b.dateTime.toLocal() : b.dateTime;
+      final duration = b.service?.duration ?? 60;
+      final bookingEnd = local.add(Duration(minutes: duration));
+      if (local.isBefore(slotEnd) && bookingEnd.isAfter(slotStart)) return b;
     }
     return null;
   }
@@ -308,12 +316,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(
-          content: Text('${context.read<LocaleProvider>().t('calendar.error')}: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showApiError(context, e);
     }
   }
 
@@ -335,9 +338,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-      );
+      showApiError(context, e);
     }
   }
 
@@ -359,9 +360,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-      );
+      showApiError(context, e);
     }
   }
 
@@ -1018,7 +1017,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         children: [
           ...List.generate(endHour - startHour + 1, (i) {
             final hour = startHour + i;
-            final booking = _bookingAtHour(dayBookings, hour);
+            final booking = _bookingAtHour(_selectedDate, dayBookings, hour);
             final timeBlock = _getTimeBlockAtTime(_selectedStaffId, hour);
             final outsideHours = _isTimeSlotOutsideWorkingHours(hour);
             return SizedBox(

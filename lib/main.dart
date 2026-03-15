@@ -7,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/app_config.dart';
 import 'firebase_options.dart';
-import 'l10n/app_locales.dart';
 import 'l10n/locale_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
@@ -111,8 +110,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _cachesClearedForLogout = false;
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +130,19 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (auth.isAuthenticated) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _cachesClearedForLogout = false);
+          });
           return const MainShell();
+        }
+        if (!_cachesClearedForLogout) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            context.read<SalonCache>().invalidate();
+            context.read<BookingsCache>().invalidate();
+            context.read<ServicesStaffCache>().invalidateAll();
+            setState(() => _cachesClearedForLogout = true);
+          });
         }
         return const LoginScreen();
       },

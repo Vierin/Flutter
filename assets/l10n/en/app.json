@@ -172,6 +172,7 @@
   },
   "analytics": {
     "title": "Analytics",
+    "inDevelopment": "Section in development. Reports and metrics coming soon.",
     "period": "Period:",
     "sales": "Sales",
     "visits": "Visits",

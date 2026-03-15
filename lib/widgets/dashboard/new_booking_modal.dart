@@ -11,6 +11,7 @@ import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
 import '../../services/services_api_service.dart';
 import '../../services/staff_api_service.dart';
+import '../../utils/show_api_error.dart';
 
 /// Модалка добавления или редактирования резервации (2 шага).
 /// Может открываться с предзагруженными данными или загружать их сама (быстрое открытие).
@@ -314,9 +315,7 @@ class _NewBookingModalState extends State<NewBookingModal> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-      );
+      showApiError(context, e);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

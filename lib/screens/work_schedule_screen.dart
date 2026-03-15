@@ -5,6 +5,7 @@ import '../constants/schedule.dart';
 import '../services/auth_service.dart';
 import '../services/cache/salon_cache.dart';
 import '../services/dashboard_api_service.dart';
+import '../utils/show_api_error.dart';
 import '../widgets/work_schedule/work_schedule_time_modal.dart';
 
 class _DaySchedule {
@@ -152,15 +153,8 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Расписание сохранено')),
       );
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Не удалось сохранить'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    } catch (e) {
+      if (mounted) showApiError(context, e);
     }
     if (mounted) setState(() => _saving = false);
   }

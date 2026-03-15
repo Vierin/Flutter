@@ -7,6 +7,7 @@ import '../../models/salon.dart';
 import '../../services/auth_service.dart';
 import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
+import '../../utils/show_api_error.dart';
 import '../../widgets/address_picker_modal.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -165,9 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _salonSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
-      );
+      showApiError(context, e);
     }
   }
 

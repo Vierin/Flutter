@@ -173,6 +173,7 @@
   },
   "analytics": {
     "title": "Phân tích",
+    "inDevelopment": "Tính năng đang phát triển. Báo cáo và số liệu sẽ sớm có.",
     "period": "Kỳ:",
     "sales": "Doanh số",
     "visits": "Lượt khách",

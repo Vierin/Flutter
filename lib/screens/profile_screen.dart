@@ -8,18 +8,10 @@ import '../services/auth_service.dart';
 import '../services/cache/salon_cache.dart';
 import '../services/cache/services_staff_cache.dart';
 import '../services/dashboard_api_service.dart';
-import '../services/services_api_service.dart';
-import '../services/staff_api_service.dart';
 import 'main_shell.dart';
 import 'settings_screen.dart';
 import 'subscription_screen.dart';
 import 'work_schedule_screen.dart';
-
-// Profile theme colors (purple as in design)
-class _ProfileColors {
-  static const purple = Color(0xFF9C27B0);
-  static const purpleLight = Color(0xFFE1BEE7);
-}
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -117,17 +109,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             foregroundColor: AppColors.textPrimary,
             elevation: 0,
           ),
-          body: SingleChildScrollView(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildCurrentSubscriptionCard(),
-            const SizedBox(height: 24),
-            _buildFourCardsGrid(),
-          ],
-        ),
-      ),
+          body: RefreshIndicator(
+            onRefresh: () async {
+              await _loadSubscription();
+              if (mounted) await _loadCounts();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildCurrentSubscriptionCard(),
+                  const SizedBox(height: 24),
+                  _buildFourCardsGrid(),
+                ],
+              ),
+            ),
+          ),
     );
       },
     );
@@ -361,7 +360,7 @@ class _ProfileGridCard extends StatelessWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: AppColors.profilePurpleLight,
+                        color: AppColors.primary100,
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
@@ -370,7 +369,7 @@ class _ProfileGridCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.profilePurple,
+                          color: AppColors.primary600,
                         ),
                       ),
                     ),

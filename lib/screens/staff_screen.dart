@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/cache/salon_cache.dart';
 import '../../services/cache/services_staff_cache.dart';
 import '../../services/staff_api_service.dart';
+import '../../utils/show_api_error.dart';
 import 'add_staff_screen.dart';
 
 enum StaffSort { nameAz, nameZa }
@@ -58,9 +59,7 @@ class _StaffScreenState extends State<StaffScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-        );
+        showApiError(context, e);
       }
     }
   }
@@ -109,11 +108,7 @@ class _StaffScreenState extends State<StaffScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (mounted) showApiError(context, e);
     } finally {
       if (mounted) setState(() => _isActionLoading = false);
     }
@@ -518,16 +513,7 @@ class _StaffScreenState extends State<StaffScreen> {
                                         );
                                       }
                                     } catch (e) {
-                                      if (mounted) {
-                                        ScaffoldMessenger.maybeOf(
-                                          context,
-                                        )?.showSnackBar(
-                                          SnackBar(
-                                            content: Text('Ошибка: $e'),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                      }
+                                      if (mounted) showApiError(context, e);
                                     } finally {
                                       if (mounted) {
                                         setState(

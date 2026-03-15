@@ -4,6 +4,7 @@ import '../constants/colors.dart';
 import '../services/auth_service.dart';
 import '../services/cache/salon_cache.dart';
 import '../services/dashboard_api_service.dart';
+import '../utils/show_api_error.dart';
 
 class SalonSetupScreen extends StatefulWidget {
   const SalonSetupScreen({super.key, required this.onSaved});
@@ -72,14 +73,7 @@ class _SalonSetupScreenState extends State<SalonSetupScreen> {
       widget.onSaved();
     } catch (e) {
       if (!mounted) return;
-      final message =
-          e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(
-          content: Text(message.length > 80 ? 'Ошибка создания салона' : message),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showApiError(context, e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

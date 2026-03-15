@@ -6,6 +6,7 @@ import '../../models/booking.dart';
 import '../../services/auth_service.dart';
 import '../../services/cache/bookings_cache.dart';
 import '../../services/dashboard_api_service.dart';
+import '../../utils/show_api_error.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 
@@ -44,8 +45,11 @@ class _AllBookingsScreenState extends State<AllBookingsScreen> {
           _loading = false;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        showApiError(context, e);
+      }
     }
   }
 

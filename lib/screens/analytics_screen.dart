@@ -131,6 +131,31 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.primary100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 22, color: AppColors.primary500),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        locale.t('analytics.inDevelopment'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
               _buildClientsCard(locale),
               const SizedBox(height: 24),

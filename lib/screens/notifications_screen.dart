@@ -79,37 +79,47 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: items.isEmpty
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('😔', style: TextStyle(fontSize: 64, height: 1)),
-                    const SizedBox(height: 24),
-                    Text(
-                      locale.t('notifications.empty'),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+      body: RefreshIndicator(
+        onRefresh: () => store.load(),
+        child: items.isEmpty
+            ? SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: 400,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('😔', style: TextStyle(fontSize: 64, height: 1)),
+                          const SizedBox(height: 24),
+                          Text(
+                            locale.t('notifications.empty'),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
+              )
+            : ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                itemCount: items.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final n = items[index];
+                  return _NotificationTile(notification: n);
+                },
               ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final n = items[index];
-                return _NotificationTile(notification: n);
-              },
-            ),
+      ),
     );
   }
 }

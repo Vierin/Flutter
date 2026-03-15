@@ -6,6 +6,7 @@ import '../../services/auth_service.dart';
 import '../../services/cache/services_staff_cache.dart';
 import '../../services/staff_api_service.dart';
 import '../../services/services_api_service.dart';
+import '../../utils/show_api_error.dart';
 
 /// Полноэкранная форма добавления сотрудника (как на вебе: имя, email, телефон, выбор услуг).
 class AddStaffScreen extends StatefulWidget {
@@ -112,6 +113,7 @@ class _AddStaffScreenState extends State<AddStaffScreen> {
           _error = e.toString();
           _saving = false;
         });
+        showApiError(context, e);
       }
     }
   }

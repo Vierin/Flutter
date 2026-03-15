@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/cache/salon_cache.dart';
 import '../../services/cache/services_staff_cache.dart';
 import '../../services/services_api_service.dart';
+import '../../utils/show_api_error.dart';
 
 enum ServicesSort {
   nameAz,
@@ -96,9 +97,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           _services = [];
           _isLoading = false;
         });
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-        );
+        showApiError(context, e);
       }
     }
   }
@@ -271,11 +270,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-        );
-      }
+      if (mounted) showApiError(context, e);
     } finally {
       if (mounted) setState(() => _isActionLoading = false);
     }
@@ -380,14 +375,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   );
                 }
               } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    SnackBar(
-                      content: Text('Ошибка: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                if (mounted) showApiError(context, e);
               } finally {
                 if (mounted) setState(() => _isActionLoading = false);
               }
@@ -832,16 +820,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                   );
                                 }
                               } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.maybeOf(
-                                    context,
-                                  )?.showSnackBar(
-                                    SnackBar(
-                                      content: Text('Ошибка: $e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
+                                if (mounted) showApiError(context, e);
                               } finally {
                                 if (mounted)
                                   setState(() => _isActionLoading = false);

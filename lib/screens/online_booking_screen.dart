@@ -6,6 +6,7 @@ import '../../models/salon.dart';
 import '../../services/auth_service.dart';
 import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
+import '../../utils/show_api_error.dart';
 import 'booking_link_screen.dart';
 
 const _kBookingPeriodKey = 'online_booking_period_days';
@@ -68,15 +69,10 @@ class _OnlineBookingScreenState extends State<OnlineBookingScreen> {
       context.read<SalonCache>().invalidate();
       final updated = await context.read<SalonCache>().getSalon(token);
       if (mounted) setState(() => _salon = updated);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _autoConfirm = !value);
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Не удалось сохранить'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showApiError(context, e);
       }
     }
   }
