@@ -235,13 +235,14 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  /// Выход: сразу сбрасываем состояние (мгновенный переход на логин), signOut — в фоне.
   Future<void> logout() async {
-    try {
-      await _supabase.auth.signOut();
-    } catch (_) {}
     _user = null;
     _isAuthenticated = false;
     notifyListeners();
+    try {
+      await _supabase.auth.signOut();
+    } catch (_) {}
   }
 
   /// Обновляет профиль (имя, телефон) через PUT /auth/profile.

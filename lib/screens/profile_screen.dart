@@ -128,34 +128,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  static String _packageLabel(String? type) {
+    if (type == null || type.isEmpty) return '—';
+    switch (type.toUpperCase()) {
+      case 'TRIAL':
+        return 'Пробный';
+      case 'STARTER':
+        return 'Starter';
+      default:
+        return type;
+    }
+  }
+
+  static String _statusLabel(bool loading, Subscription? sub) {
+    if (loading) return 'Загрузка...';
+    if (sub == null) return 'Нет подписки';
+    switch (sub.status.toUpperCase()) {
+      case 'ACTIVE':
+        return 'Активна';
+      case 'CANCELLED':
+        return 'Отменена';
+      case 'EXPIRED':
+        return 'Истекла';
+      case 'INACTIVE':
+        return 'Неактивна';
+      default:
+        return sub.status;
+    }
+  }
+
   Widget _buildCurrentSubscriptionCard() {
     final sub = _subscription;
     final isActive = sub?.isActive ?? false;
     final borderColor = isActive ? AppColors.primary500 : AppColors.error500;
     final statusColor = isActive ? AppColors.primary500 : AppColors.error500;
-
-    String statusText;
-    if (_loadingSubscription) {
-      statusText = 'Загрузка...';
-    } else if (sub == null) {
-      statusText = 'Нет активной подписки';
-    } else if (sub.isActive) {
-      final end = sub.endDate ?? sub.nextPaymentDate ?? sub.trialEndDate;
-      statusText = end != null && end.isNotEmpty
-          ? 'Активна до ${_formatDate(end)}'
-          : 'Активна';
-    } else if (sub.isExpired) {
-      statusText = sub.endDate != null && sub.endDate!.isNotEmpty
-          ? 'Истекла ${_formatDate(sub.endDate)}'
-          : 'Истекла';
-    } else if (sub.isCancelled) {
-      final end = sub.endDate ?? sub.nextPaymentDate;
-      statusText = end != null && end.isNotEmpty
-          ? 'Отменена, действительна до ${_formatDate(end)}'
-          : 'Отменена';
-    } else {
-      statusText = 'Неактивна';
-    }
+    final endDateStr = sub != null
+        ? _formatDate(sub.endDate ?? sub.nextPaymentDate ?? sub.trialEndDate)
+        : '—';
 
     return Material(
       color: Colors.transparent,
@@ -182,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -195,15 +204,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: AppColors.textSecondary,
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Пакет: ${_packageLabel(sub?.type)}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                      statusText,
+                      'Статус: ${_statusLabel(_loadingSubscription, sub)}',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                         color: _loadingSubscription
                             ? AppColors.textSecondary
                             : statusColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Действительна до: $endDateStr',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],

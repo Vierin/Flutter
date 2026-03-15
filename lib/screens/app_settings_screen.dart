@@ -221,11 +221,9 @@ class AppSettingsScreen extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () async {
-          await context.read<AuthService>().logout();
-          if (context.mounted) {
-            Navigator.pop(context);
-          }
+        onTap: () {
+          context.read<AuthService>().logout();
+          // Состояние сбрасывается сразу — AuthWrapper показывает LoginScreen
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(

@@ -747,10 +747,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       d.day,
                       count,
                       isSelected,
-                      () => setState(() {
-                        _selectedDate = d;
-                        _expandedView = false;
-                      }),
+                      () {
+                        setState(() {
+                          _selectedDate = d;
+                          _expandedView = false;
+                          _displayWeekStart = _mondayOfWeek(d);
+                        });
+                        // После закрытия календаря прокрутить пилсы дат к неделе выбранного дня
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) return;
+                          final page = _weekIndexForDate(d);
+                          if (page >= 0 && page < _dayStripTotalWeeks) {
+                            _dayStripPageController.animateToPage(
+                              page,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                        });
+                      },
                       compact: true,
                     ),
                   ),
