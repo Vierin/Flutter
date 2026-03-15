@@ -5,7 +5,6 @@ import '../../l10n/locale_provider.dart';
 import '../../models/booking.dart';
 import '../../utils/show_api_error.dart';
 import '../../models/salon.dart';
-import '../../utils/auth_load_helper.dart';
 import '../../services/auth_service.dart';
 import '../../services/cache/bookings_cache.dart';
 import '../../services/cache/salon_cache.dart';
@@ -14,7 +13,6 @@ import '../../services/notifications_store.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
 import '../../widgets/dashboard/dashboard_header_pill.dart';
 import '../../widgets/dashboard/dashboard_link_card.dart';
-import '../../widgets/dashboard/dashboard_loading_card.dart';
 import '../../widgets/dashboard/dashboard_setup_card.dart';
 import '../../widgets/dashboard/upcoming_bookings_list.dart';
 import '../app_settings_screen.dart';
@@ -204,7 +202,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          _salon?.name ?? 'Мой салон',
+                          _isLoading || _salon == null
+                              ? context.watch<LocaleProvider>().t('nav.dashboard')
+                              : (_salon!.name ?? ''),
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -318,7 +318,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 16),
                 ],
                 if (_isLoading)
-                  const DashboardLoadingCard()
+                  const SizedBox(
+                    height: 120,
+                    child: Center(
+                      child: CircularProgressIndicator(color: AppColors.primary500),
+                    ),
+                  )
                 else if (_salon == null)
                   DashboardSetupCard(
                     onSetupTap: () => Navigator.push(

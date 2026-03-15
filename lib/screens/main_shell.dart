@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../l10n/locale_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/cache/bookings_cache.dart';
 import '../../services/cache/salon_cache.dart';
 import '../../services/push_notification_service.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
@@ -44,6 +45,7 @@ class MainShellState extends State<MainShell> {
     }
     try {
       await context.read<SalonCache>().getSalon(token);
+      await context.read<BookingsCache>().getBookings(token);
     } catch (_) {
       // показываем интерфейс даже при ошибке
     }

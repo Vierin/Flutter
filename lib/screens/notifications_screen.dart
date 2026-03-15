@@ -102,9 +102,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
             )
           : ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
               itemCount: items.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final n = items[index];
                 return _NotificationTile(notification: n);
@@ -119,46 +119,56 @@ class _NotificationTile extends StatelessWidget {
 
   final AppNotification notification;
 
+  static final DateFormat _dateFormat = DateFormat('dd.MM.yyyy HH:mm');
+
   @override
   Widget build(BuildContext context) {
-    final time = DateFormat.yMMMd().add_Hm().format(notification.createdAt);
+    final timeStr = _dateFormat.format(notification.createdAt);
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      title: Text(
-        notification.title,
-        style: TextStyle(
-          fontWeight: notification.read ? FontWeight.normal : FontWeight.w600,
-          color: AppColors.textPrimary,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () {
+          context.read<NotificationsStore>().markRead(notification.id);
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                notification.title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: notification.read ? FontWeight.normal : FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              if (notification.body.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  notification.body,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Text(
+                timeStr,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (notification.body.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              notification.body,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-          const SizedBox(height: 4),
-          Text(
-            time,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary.withValues(alpha: 0.8),
-            ),
-          ),
-        ],
-      ),
-      onTap: () {
-        context.read<NotificationsStore>().markRead(notification.id);
-        // TODO: if notification.data has bookingId, open booking detail
-      },
     );
   }
 }
