@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "601312951370",
+    "project_id": "henzo-79a1e",
+    "storage_bucket": "henzo-79a1e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:601312951370:android:f6dfff2ead95cff285bab3",
+        "android_client_info": {
+          "package_name": "com.example.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "601312951370-gkff3ktrv5oom6ai5cf0pgbq58n5o6e7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAx1KjbncEMpzPl5YbqHCIPvkpEJjVBEQ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "601312951370-gkff3ktrv5oom6ai5cf0pgbq58n5o6e7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:601312951370:android:2cfc956e099c46ce85bab3",
+        "android_client_info": {
+          "package_name": "com.henzo.owner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "601312951370-gkff3ktrv5oom6ai5cf0pgbq58n5o6e7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAx1KjbncEMpzPl5YbqHCIPvkpEJjVBEQ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "601312951370-gkff3ktrv5oom6ai5cf0pgbq58n5o6e7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -34,46 +34,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'placeholder-web',
-    appId: '1:000000000000:web:placeholder',
-    messagingSenderId: '000000000000',
-    projectId: 'henzo-placeholder',
-    authDomain: 'henzo-placeholder.firebaseapp.com',
-    storageBucket: 'henzo-placeholder.appspot.com',
+    apiKey: 'AIzaSyANZCtkCsOYpreEn44HelvLxvkD1bWA_Vg',
+    appId: '1:601312951370:web:a2298598379d85ba85bab3',
+    messagingSenderId: '601312951370',
+    projectId: 'henzo-79a1e',
+    authDomain: 'henzo-79a1e.firebaseapp.com',
+    storageBucket: 'henzo-79a1e.firebasestorage.app',
+    measurementId: 'G-0D5TCGWQH8',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'placeholder-android',
-    appId: '1:000000000000:android:placeholder',
-    messagingSenderId: '000000000000',
-    projectId: 'henzo-placeholder',
-    storageBucket: 'henzo-placeholder.appspot.com',
+    apiKey: 'AIzaSyAx1KjbncEMpzPl5YbqHCIPvkpEJjVBEQ4',
+    appId: '1:601312951370:android:f6dfff2ead95cff285bab3',
+    messagingSenderId: '601312951370',
+    projectId: 'henzo-79a1e',
+    storageBucket: 'henzo-79a1e.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'placeholder-ios',
-    appId: '1:000000000000:ios:placeholder',
-    messagingSenderId: '000000000000',
-    projectId: 'henzo-placeholder',
-    storageBucket: 'henzo-placeholder.appspot.com',
+    apiKey: 'AIzaSyDocvyhRMnlD5sZYME89d9SoZDkKwXAJ6M',
+    appId: '1:601312951370:ios:c4793a94de2137fa85bab3',
+    messagingSenderId: '601312951370',
+    projectId: 'henzo-79a1e',
+    storageBucket: 'henzo-79a1e.firebasestorage.app',
     iosBundleId: 'com.example.mobile',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'placeholder-macos',
-    appId: '1:000000000000:ios:placeholder',
-    messagingSenderId: '000000000000',
-    projectId: 'henzo-placeholder',
-    storageBucket: 'henzo-placeholder.appspot.com',
+    apiKey: 'AIzaSyDocvyhRMnlD5sZYME89d9SoZDkKwXAJ6M',
+    appId: '1:601312951370:ios:c4793a94de2137fa85bab3',
+    messagingSenderId: '601312951370',
+    projectId: 'henzo-79a1e',
+    storageBucket: 'henzo-79a1e.firebasestorage.app',
     iosBundleId: 'com.example.mobile',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'placeholder-windows',
-    appId: '1:000000000000:web:placeholder',
-    messagingSenderId: '000000000000',
-    projectId: 'henzo-placeholder',
-    authDomain: 'henzo-placeholder.firebaseapp.com',
-    storageBucket: 'henzo-placeholder.appspot.com',
+    apiKey: 'AIzaSyANZCtkCsOYpreEn44HelvLxvkD1bWA_Vg',
+    appId: '1:601312951370:web:4c2ab692b0ef286785bab3',
+    messagingSenderId: '601312951370',
+    projectId: 'henzo-79a1e',
+    authDomain: 'henzo-79a1e.firebaseapp.com',
+    storageBucket: 'henzo-79a1e.firebasestorage.app',
+    measurementId: 'G-ZPW16J3GYD',
   );
+
 }
