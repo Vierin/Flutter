@@ -120,6 +120,11 @@
     "inactive": "Không hoạt động",
     "noSubscription": "Chưa đăng ký"
   },
+  "notifications": {
+    "title": "Thông báo",
+    "empty": "Không có thông báo",
+    "cleared": "Đã xóa thông báo"
+  },
   "settings": {
     "languageEn": "English",
     "languageRu": "Русский",

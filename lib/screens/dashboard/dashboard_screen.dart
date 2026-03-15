@@ -10,6 +10,7 @@ import '../../services/auth_service.dart';
 import '../../services/cache/bookings_cache.dart';
 import '../../services/cache/salon_cache.dart';
 import '../../services/dashboard_api_service.dart';
+import '../../services/notifications_store.dart';
 import '../../widgets/dashboard/booking_detail_modal.dart';
 import '../../widgets/dashboard/dashboard_header_pill.dart';
 import '../../widgets/dashboard/dashboard_link_card.dart';
@@ -226,14 +227,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   : '—',
                               onTap: null,
                             ),
-                          DashboardHeaderIconPill(
-                            icon: Icons.notifications_outlined,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const NotificationsScreen(),
-                              ),
-                            ),
+                          Consumer<NotificationsStore>(
+                            builder: (_, store, __) {
+                              final count = store.unreadCount;
+                              return Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  DashboardHeaderIconPill(
+                                    icon: Icons.notifications_outlined,
+                                    onTap: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const NotificationsScreen(),
+                                      ),
+                                    ),
+                                  ),
+                                  if (count > 0)
+                                    Positioned(
+                                      top: -4,
+                                      right: -4,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 18,
+                                          minHeight: 18,
+                                        ),
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.primary500,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          count > 99 ? '99+' : '$count',
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
                           ),
                           DashboardHeaderIconPill(
                             icon: Icons.settings_outlined,

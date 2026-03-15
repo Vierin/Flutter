@@ -120,6 +120,11 @@
     "inactive": "Inactive",
     "noSubscription": "No subscription"
   },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications",
+    "cleared": "Notifications cleared"
+  },
   "settings": {
     "languageEn": "English",
     "languageRu": "Russian",

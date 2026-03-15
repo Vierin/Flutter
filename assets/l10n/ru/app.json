@@ -120,6 +120,11 @@
     "inactive": "Неактивна",
     "noSubscription": "Нет подписки"
   },
+  "notifications": {
+    "title": "Уведомления",
+    "empty": "Нет уведомлений",
+    "cleared": "Уведомления очищены"
+  },
   "settings": {
     "languageEn": "English",
     "languageRu": "Русский",

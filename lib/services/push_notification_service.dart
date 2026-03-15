@@ -29,8 +29,15 @@ class PushNotificationService {
     enableVibration: true,
   );
 
+  /// Called when a notification is received (foreground) or app opened from notification.
+  static void Function(String title, String body, Map<String, String> data)? onNotificationReceived;
+
   /// Initialize: request permission, get token, set up message handlers.
-  static Future<void> initialize() async {
+  /// [onNotificationReceived] is called for each received message so the app can show them in the notifications screen.
+  static Future<void> initialize({
+    void Function(String title, String body, Map<String, String> data)? onNotificationReceived,
+  }) async {
+    PushNotificationService.onNotificationReceived = onNotificationReceived;
     _log('initialize start');
     try {
       final androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -59,6 +66,11 @@ class PushNotificationService {
       final initial = await _messaging.getInitialMessage();
       if (initial != null) {
         _log('initialMessage: ${initial.notification?.title}');
+        _notifyReceived(
+          initial.notification?.title ?? 'Henzo',
+          initial.notification?.body ?? '',
+          _dataToStringMap(initial.data),
+        );
         _onMessageOpenedApp(initial);
       }
       _log('initialize done');
@@ -132,6 +144,17 @@ class PushNotificationService {
     }
   }
 
+  static Map<String, String> _dataToStringMap(Map<String, dynamic>? data) {
+    if (data == null || data.isEmpty) return {};
+    return data.map((k, v) => MapEntry(k, v?.toString() ?? ''));
+  }
+
+  static void _notifyReceived(String title, String body, Map<String, String> data) {
+    try {
+      onNotificationReceived?.call(title, body, data);
+    } catch (_) {}
+  }
+
   static void _onForegroundMessage(RemoteMessage message) {
     _log('onMessage (foreground): title=${message.notification?.title} body=${message.notification?.body}');
     final title = message.notification?.title ?? 'Henzo';
@@ -140,6 +163,7 @@ class PushNotificationService {
       _log('onMessage: skip show (no title/body)');
       return;
     }
+    _notifyReceived(title, body, _dataToStringMap(message.data));
     _log('onMessage: showing local notification');
     _showLocalNotification(
       id: message.hashCode & 0x7FFFFFFF,
@@ -179,5 +203,10 @@ class PushNotificationService {
 
   static void _onMessageOpenedApp(RemoteMessage message) {
     _log('onMessageOpenedApp: ${message.data}');
+    _notifyReceived(
+      message.notification?.title ?? 'Henzo',
+      message.notification?.body ?? '',
+      _dataToStringMap(message.data),
+    );
   }
 }

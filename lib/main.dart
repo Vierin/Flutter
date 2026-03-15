@@ -15,6 +15,7 @@ import 'services/auth_service.dart';
 import 'services/cache/bookings_cache.dart';
 import 'services/cache/salon_cache.dart';
 import 'services/cache/services_staff_cache.dart';
+import 'services/notifications_store.dart';
 import 'services/push_notification_service.dart';
 import 'theme/app_theme.dart';
 
@@ -25,11 +26,15 @@ Future<void> main() async {
   } catch (_) {
     await dotenv.load(fileName: 'assets/.env.example');
   }
+  final notificationsStore = NotificationsStore();
+  await notificationsStore.load();
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    await PushNotificationService.initialize();
+    await PushNotificationService.initialize(
+      onNotificationReceived: notificationsStore.addFromPush,
+    );
   } catch (e) {
     assert(() {
       // ignore: avoid_print
@@ -41,11 +46,13 @@ Future<void> main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
-  runApp(const MyApp());
+  runApp(MyApp(notificationsStore: notificationsStore));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.notificationsStore});
+
+  final NotificationsStore? notificationsStore;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +63,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SalonCache()),
         ChangeNotifierProvider(create: (_) => BookingsCache()),
         ChangeNotifierProvider(create: (_) => ServicesStaffCache()),
+        if (notificationsStore != null)
+          ChangeNotifierProvider.value(value: notificationsStore!),
       ],
       child: Consumer<LocaleProvider>(
         builder: (context, locale, _) {
