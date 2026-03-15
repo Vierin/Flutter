@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
+import '../../l10n/locale_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/cache/salon_cache.dart';
+import '../../services/push_notification_service.dart';
 import '../../widgets/dashboard/new_booking_modal.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'calendar_screen.dart';
@@ -43,9 +45,16 @@ class MainShellState extends State<MainShell> {
     try {
       await context.read<SalonCache>().getSalon(token);
     } catch (_) {
-      // показываем интерфейс даже при ошибке — пользователь увидит контент или ошибки на экранах
+      // показываем интерфейс даже при ошибке
     }
-    if (mounted) setState(() => _salonLoading = false);
+    if (mounted) {
+      setState(() => _salonLoading = false);
+      final locale = context.read<LocaleProvider>();
+      PushNotificationService.registerToken(
+        accessToken: token,
+        language: locale.localeCode,
+      );
+    }
   }
 
   /// Переключиться на первую вкладку и открыть маршрут (например /staff, /services).
@@ -128,47 +137,49 @@ class MainShellState extends State<MainShell> {
           ),
           constraints: const BoxConstraints(minHeight: 42, maxHeight: 56),
           padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.dashboard_outlined,
-                  activeIcon: Icons.dashboard,
-                  label: 'Дашборд',
-                  isSelected: _currentIndex == 0,
-                  onTap: () => setState(() => _currentIndex = 0),
+          child: Consumer<LocaleProvider>(
+            builder: (context, locale, _) => Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: _NavItem(
+                    icon: Icons.dashboard_outlined,
+                    activeIcon: Icons.dashboard,
+                    label: locale.t('nav.dashboard'),
+                    isSelected: _currentIndex == 0,
+                    onTap: () => setState(() => _currentIndex = 0),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.calendar_today_outlined,
-                  activeIcon: Icons.calendar_today,
-                  label: 'Календарь',
-                  isSelected: _currentIndex == 1,
-                  onTap: () => setState(() => _currentIndex = 1),
+                Expanded(
+                  child: _NavItem(
+                    icon: Icons.calendar_today_outlined,
+                    activeIcon: Icons.calendar_today,
+                    label: locale.t('nav.calendar'),
+                    isSelected: _currentIndex == 1,
+                    onTap: () => setState(() => _currentIndex = 1),
+                  ),
                 ),
-              ),
-              Expanded(child: _PlusButton(onTap: _openNewBooking)),
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.analytics_outlined,
-                  activeIcon: Icons.analytics,
-                  label: 'Аналитика',
-                  isSelected: _currentIndex == 2,
-                  onTap: () => setState(() => _currentIndex = 2),
+                Expanded(child: _PlusButton(onTap: _openNewBooking)),
+                Expanded(
+                  child: _NavItem(
+                    icon: Icons.analytics_outlined,
+                    activeIcon: Icons.analytics,
+                    label: locale.t('nav.analytics'),
+                    isSelected: _currentIndex == 2,
+                    onTap: () => setState(() => _currentIndex = 2),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _NavItem(
-                  icon: Icons.person_outline,
-                  activeIcon: Icons.person,
-                  label: 'Профиль',
-                  isSelected: _currentIndex == 3,
-                  onTap: () => setState(() => _currentIndex = 3),
+                Expanded(
+                  child: _NavItem(
+                    icon: Icons.person_outline,
+                    activeIcon: Icons.person,
+                    label: locale.t('nav.profile'),
+                    isSelected: _currentIndex == 3,
+                    onTap: () => setState(() => _currentIndex = 3),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

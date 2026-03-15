@@ -47,6 +47,8 @@ dependencies:
   share_plus: ^10.1.4
   shared_preferences: ^2.3.3
   url_launcher: ^6.2.5
+  firebase_core: ^4.5.0
+  firebase_messaging: ^16.1.2
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +72,9 @@ flutter:
     - assets/.env.example
     - assets/icon.png
     - assets/logo.png
+    - assets/l10n/en/
+    - assets/l10n/ru/
+    - assets/l10n/vi/
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

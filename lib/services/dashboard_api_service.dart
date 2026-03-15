@@ -1,43 +1,27 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 
-import '../config/app_config.dart';
+import 'api_client.dart';
 import '../models/booking.dart';
 import '../models/salon.dart';
 import '../models/subscription.dart';
 import '../models/time_block.dart';
 
 class DashboardApiService {
-  static String get _baseUrl => AppConfig.apiUrl;
-
   /// GET /salons/current — салон владельца.
   static Future<Salon?> getCurrentSalon(String accessToken) async {
-    final url = Uri.parse('$_baseUrl/salons/current');
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': 'Bearer $accessToken',
-        },
-      );
-      if (kDebugMode) {
-        debugPrint('[DashboardAPI] GET /salons/current status=${response.statusCode}');
-      }
-      if (response.statusCode != 200) return null;
-      final body = json.decode(response.body) as Map<String, dynamic>?;
-      if (body == null || body['success'] != true) {
-        if (kDebugMode) debugPrint('[DashboardAPI] salon success=false or no body');
+      final body = await ApiClient.get('/salons/current', accessToken);
+      if (body is! Map<String, dynamic>) return null;
+      if (body['success'] != true) {
+        if (kDebugMode) debugPrint('[DashboardAPI] salon success=false');
         return null;
       }
       final data = body['data'];
       if (data == null || data is! Map<String, dynamic>) return null;
       return Salon.fromJson(Map<String, dynamic>.from(data));
-    } catch (e) {
-      if (kDebugMode) debugPrint('[DashboardAPI] getCurrentSalon error: $e');
-      rethrow;
+    } on ApiException catch (e) {
+      if (kDebugMode) debugPrint('[DashboardAPI] getCurrentSalon: $e');
+      return null;
     }
   }
 
@@ -46,24 +30,13 @@ class DashboardApiService {
     String accessToken,
     Map<String, dynamic> payload,
   ) async {
-    final url = Uri.parse('$_baseUrl/salons/current');
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer $accessToken',
-      },
-      body: json.encode(payload),
-    );
-    if (kDebugMode) {
-      debugPrint('[DashboardAPI] PUT /salons/current status=${response.statusCode}');
-    }
-    if (response.statusCode != 200) {
-      throw Exception(_errorMessageFromResponse(response));
-    }
-    final data = json.decode(response.body);
-    if (data is! Map<String, dynamic>) throw Exception('Invalid response');
-    return Salon.fromJson(Map<String, dynamic>.from(data));
+    final data = await ApiClient.put(
+      '/salons/current',
+      accessToken,
+      body: payload,
+    ) as Map<String, dynamic>?;
+    if (data == null) throw ApiException('Invalid response');
+    return Salon.fromJson(data);
   }
 
   /// POST /salons/current — создать салон владельца.
@@ -71,117 +44,52 @@ class DashboardApiService {
     String accessToken,
     Map<String, dynamic> payload,
   ) async {
-    final url = Uri.parse('$_baseUrl/salons/current');
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer $accessToken',
-      },
-      body: json.encode(payload),
-    );
-    if (kDebugMode) {
-      debugPrint('[DashboardAPI] POST /salons/current status=${response.statusCode}');
-    }
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(_errorMessageFromResponse(response));
-    }
-    final data = json.decode(response.body);
-    if (data is! Map<String, dynamic>) throw Exception('Invalid response');
-    return Salon.fromJson(Map<String, dynamic>.from(data));
+    final data = await ApiClient.post(
+      '/salons/current',
+      accessToken,
+      body: payload,
+    ) as Map<String, dynamic>?;
+    if (data == null) throw ApiException('Invalid response');
+    return Salon.fromJson(data);
   }
 
   /// GET /subscriptions/current — текущая подписка владельца.
   static Future<Subscription?> getCurrentSubscription(String accessToken) async {
-    final url = Uri.parse('$_baseUrl/subscriptions/current');
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': 'Bearer $accessToken',
-        },
-      );
-      if (kDebugMode) {
-        debugPrint('[DashboardAPI] GET /subscriptions/current status=${response.statusCode}');
+      final body = await ApiClient.get('/subscriptions/current', accessToken);
+      if (body is! Map<String, dynamic>) return null;
+      final data = body['data'];
+      if (data is Map<String, dynamic>) {
+        return Subscription.fromJson(Map<String, dynamic>.from(data));
       }
-      if (response.statusCode != 200) return null;
-      final body = json.decode(response.body);
-      if (body is Map<String, dynamic>) {
-        final data = body['data'];
-        if (data is Map<String, dynamic>) {
-          return Subscription.fromJson(Map<String, dynamic>.from(data));
-        }
-        return Subscription.fromJson(body);
-      }
-      return null;
-    } catch (e) {
-      if (kDebugMode) debugPrint('[DashboardAPI] getCurrentSubscription error: $e');
+      return Subscription.fromJson(body);
+    } on ApiException catch (e) {
+      if (kDebugMode) debugPrint('[DashboardAPI] getCurrentSubscription: $e');
       return null;
     }
   }
 
   /// GET /bookings/owner — бронирования владельца.
   static Future<List<Booking>> getOwnerBookings(String accessToken) async {
-    final url = Uri.parse('$_baseUrl/bookings/owner?limit=100');
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': 'Bearer $accessToken',
-        },
-      );
-      if (kDebugMode) {
-        debugPrint('[DashboardAPI] GET /bookings/owner status=${response.statusCode} count=${response.body.length}');
-      }
-      if (response.statusCode != 200) return [];
-      final list = json.decode(response.body);
-      if (list is! List) return [];
-      final List<Booking> result = [];
-      for (final item in list) {
-        if (item is Map<String, dynamic>) {
-          try {
-            result.add(_bookingFromApi(Map<String, dynamic>.from(item)));
-          } catch (e) {
-            if (kDebugMode) debugPrint('[DashboardAPI] booking parse error: $e');
-          }
+    final list = await ApiClient.get('/bookings/owner?limit=100', accessToken);
+    if (list is! List) return [];
+    final result = <Booking>[];
+    for (final item in list) {
+      if (item is Map<String, dynamic>) {
+        try {
+          result.add(_bookingFromApi(Map<String, dynamic>.from(item)));
+        } catch (e) {
+          if (kDebugMode) debugPrint('[DashboardAPI] booking parse error: $e');
         }
       }
-      return result;
-    } catch (e) {
-      if (kDebugMode) debugPrint('[DashboardAPI] getOwnerBookings error: $e');
-      rethrow;
     }
-  }
-
-  /// Читает сообщение об ошибке из JSON ответа бекенда (поле msg или message).
-  static String _errorMessageFromResponse(http.Response response) {
-    try {
-      final body = json.decode(response.body);
-      if (body is Map<String, dynamic>) {
-        final msg = body['msg'] as String? ?? body['message'] as String?;
-        if (msg != null && msg.isNotEmpty) return msg;
-      }
-    } catch (_) {}
-    return 'HTTP ${response.statusCode}';
+    return result;
   }
 
   /// PUT /bookings/:id/confirm — подтвердить бронирование.
   static Future<bool> confirmBooking(String accessToken, String bookingId) async {
-    final url = Uri.parse('$_baseUrl/bookings/$bookingId/confirm');
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer $accessToken',
-      },
-    );
-    if (kDebugMode) {
-      debugPrint('[DashboardAPI] PUT /bookings/$bookingId/confirm status=${response.statusCode}');
-    }
-    if (response.statusCode == 200) return true;
-    throw Exception(_errorMessageFromResponse(response));
+    await ApiClient.put('/bookings/$bookingId/confirm', accessToken);
+    return true;
   }
 
   /// GET /time-blocks — блокировки времени салона.
@@ -191,29 +99,17 @@ class DashboardApiService {
     String? endDate,
     String? staffId,
   }) async {
-    var url = Uri.parse('$_baseUrl/time-blocks');
     final params = <String, String>{};
     if (startDate != null) params['startDate'] = startDate;
     if (endDate != null) params['endDate'] = endDate;
     if (staffId != null) params['staffId'] = staffId;
-    if (params.isNotEmpty) {
-      url = url.replace(queryParameters: params);
-    }
+    final path = params.isEmpty
+        ? '/time-blocks'
+        : '/time-blocks?${params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&')}';
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': 'Bearer $accessToken',
-        },
-      );
-      if (kDebugMode) {
-        debugPrint('[DashboardAPI] GET /time-blocks status=${response.statusCode}');
-      }
-      if (response.statusCode != 200) return [];
-      final list = json.decode(response.body);
+      final list = await ApiClient.get(path, accessToken);
       if (list is! List) return [];
-      final List<TimeBlock> result = [];
+      final result = <TimeBlock>[];
       for (final item in list) {
         if (item is Map<String, dynamic>) {
           try {
@@ -224,9 +120,9 @@ class DashboardApiService {
         }
       }
       return result;
-    } catch (e) {
-      if (kDebugMode) debugPrint('[DashboardAPI] getTimeBlocks error: $e');
-      rethrow;
+    } on ApiException catch (e) {
+      if (kDebugMode) debugPrint('[DashboardAPI] getTimeBlocks: $e');
+      return [];
     }
   }
 
@@ -242,7 +138,6 @@ class DashboardApiService {
     String? clientEmail,
     String? notes,
   }) async {
-    final url = Uri.parse('$_baseUrl/bookings');
     final body = <String, dynamic>{
       'salonId': salonId,
       'serviceId': serviceId,
@@ -253,62 +148,30 @@ class DashboardApiService {
       if (clientEmail != null && clientEmail.isNotEmpty) 'clientEmail': clientEmail,
       if (notes != null && notes.isNotEmpty) 'notes': notes,
     };
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer $accessToken',
-      },
-      body: json.encode(body),
-    );
-    if (kDebugMode) {
-      debugPrint('[DashboardAPI] POST /bookings status=${response.statusCode}');
-    }
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(_errorMessageFromResponse(response));
-    }
-    final data = json.decode(response.body);
-    if (data is! Map<String, dynamic>) throw Exception('Invalid response');
+    final data = await ApiClient.post(
+      '/bookings',
+      accessToken,
+      body: body,
+    ) as Map<String, dynamic>?;
+    if (data == null) throw ApiException('Invalid response');
     final booking = data['booking'];
-    if (booking is! Map<String, dynamic>) throw Exception('No booking in response');
-    return _bookingFromApi(booking);
+    if (booking is! Map<String, dynamic>) throw ApiException('No booking in response');
+    return _bookingFromApi(Map<String, dynamic>.from(booking));
   }
 
   /// PUT /bookings/:id/reject — отклонить бронирование.
   static Future<bool> rejectBooking(String accessToken, String bookingId) async {
-    final url = Uri.parse('$_baseUrl/bookings/$bookingId/reject');
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer $accessToken',
-      },
-    );
-    if (kDebugMode) {
-      debugPrint('[DashboardAPI] PUT /bookings/$bookingId/reject status=${response.statusCode}');
-    }
-    if (response.statusCode == 200) return true;
-    throw Exception(_errorMessageFromResponse(response));
+    await ApiClient.put('/bookings/$bookingId/reject', accessToken);
+    return true;
   }
 
   /// PUT /bookings/:id/cancel — отменить бронирование.
   static Future<bool> cancelBooking(String accessToken, String bookingId) async {
-    final url = Uri.parse('$_baseUrl/bookings/$bookingId/cancel');
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer $accessToken',
-      },
-    );
-    if (kDebugMode) {
-      debugPrint('[DashboardAPI] PUT /bookings/$bookingId/cancel status=${response.statusCode}');
-    }
-    if (response.statusCode == 200) return true;
-    throw Exception(_errorMessageFromResponse(response));
+    await ApiClient.put('/bookings/$bookingId/cancel', accessToken);
+    return true;
   }
 
-  /// PUT /bookings/:id — обновить бронирование (serviceId, staffId, time, notes, status).
+  /// PUT /bookings/:id — обновить бронирование.
   static Future<Booking> updateBooking(
     String accessToken,
     String bookingId, {
@@ -318,31 +181,20 @@ class DashboardApiService {
     String? notes,
     String? status,
   }) async {
-    final url = Uri.parse('$_baseUrl/bookings/$bookingId');
     final body = <String, dynamic>{};
     if (serviceId != null && serviceId.isNotEmpty) body['serviceId'] = serviceId;
     if (staffId != null && staffId.isNotEmpty) body['staffId'] = staffId;
     if (timeIso != null && timeIso.isNotEmpty) body['time'] = timeIso;
     if (notes != null) body['notes'] = notes;
     if (status != null && status.isNotEmpty) body['status'] = status;
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': 'Bearer $accessToken',
-      },
-      body: json.encode(body),
-    );
-    if (kDebugMode) {
-      debugPrint('[DashboardAPI] PUT /bookings/$bookingId status=${response.statusCode}');
-    }
-    if (response.statusCode != 200) {
-      throw Exception(_errorMessageFromResponse(response));
-    }
-    final data = json.decode(response.body) as Map<String, dynamic>?;
-    if (data == null) throw Exception('Invalid response');
+    final data = await ApiClient.put(
+      '/bookings/$bookingId',
+      accessToken,
+      body: body.isEmpty ? null : body,
+    ) as Map<String, dynamic>?;
+    if (data == null) throw ApiException('Invalid response');
     final booking = data['booking'];
-    if (booking is! Map<String, dynamic>) throw Exception('No booking in response');
+    if (booking is! Map<String, dynamic>) throw ApiException('No booking in response');
     return _bookingFromApi(Map<String, dynamic>.from(booking));
   }
 

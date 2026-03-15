@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../constants/colors.dart';
+import '../l10n/locale_provider.dart';
 import '../models/subscription.dart';
 import '../services/auth_service.dart';
 import '../services/subscription_api_service.dart';
+import '../utils/show_api_error.dart';
 
 // Цены как в веб (VND).
 const int _priceMonthlyVnd = 390000;
@@ -21,13 +23,13 @@ String _formatVnd(int amount) {
   return '$s ₫';
 }
 
-const List<String> _featureLabels = [
-  'Неограниченное количество мастеров',
-  'Персональный менеджер',
-  'Маркетинговые инструменты',
-  'Расширенная аналитика',
-  'Безлимитные имейл напоминания',
-  'Неограниченное количество услуг',
+List<String> _featureLabels(LocaleProvider locale) => [
+  locale.t('subscription.feature1'),
+  locale.t('subscription.feature2'),
+  locale.t('subscription.feature3'),
+  locale.t('subscription.feature4'),
+  locale.t('subscription.feature5'),
+  locale.t('subscription.feature6'),
 ];
 
 class SubscriptionScreen extends StatefulWidget {
@@ -101,11 +103,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.maybeOf(
-          context,
-        )?.showSnackBar(SnackBar(content: Text('Ошибка: $e')));
-      }
+      if (mounted) showApiError(context, e);
     } finally {
       if (mounted) setState(() => _checkoutLoading = null);
     }
@@ -121,17 +119,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         await _openUrl(url);
       } else if (mounted) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          const SnackBar(
-            content: Text('Нет привязки к оплате. Сначала оформите подписку.'),
-          ),
+          SnackBar(content: Text(context.read<LocaleProvider>().t('subscription.noBilling'))),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.maybeOf(
-          context,
-        )?.showSnackBar(SnackBar(content: Text('Ошибка: $e')));
-      }
+      if (mounted) showApiError(context, e);
     } finally {
       if (mounted) setState(() => _portalLoading = false);
     }
@@ -172,11 +164,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         await _load();
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.maybeOf(
-          context,
-        )?.showSnackBar(SnackBar(content: Text('Не удалось отменить: $e')));
-      }
+      if (mounted) showApiError(context, e);
     } finally {
       if (mounted) setState(() => _cancelLoading = false);
     }
@@ -191,49 +179,51 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundSecondary,
-      appBar: AppBar(
-        title: const Text(
-          'Подписка',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+    return Consumer<LocaleProvider>(
+      builder: (context, locale, _) {
+        return Scaffold(
+          backgroundColor: AppColors.backgroundSecondary,
+          appBar: AppBar(
+            title: Text(
+              locale.t('subscription.title'),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            centerTitle: true,
+            backgroundColor: AppColors.backgroundPrimary,
+            foregroundColor: AppColors.textPrimary,
+            elevation: 0,
           ),
-        ),
-        centerTitle: true,
-        backgroundColor: AppColors.backgroundPrimary,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Управление подписками',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Управляйте тарифом и расширьте возможности бизнеса',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
+          body: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  onRefresh: _load,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 8),
+                        Text(
+                          locale.t('subscription.manageTitle'),
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          locale.t('subscription.manageSubtitle'),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                     const SizedBox(height: 20),
                     // Триал-баннер
                     if (_subscription?.trialEndDate != null && !_isPaid) ...[
@@ -289,6 +279,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 ),
               ),
             ),
+        );
+      },
     );
   }
 
@@ -492,6 +484,62 @@ class _PaidPlanCard extends StatelessWidget {
   }
 }
 
+/// Single invoice row for billing history list.
+class _SubscriptionInvoiceTile extends StatelessWidget {
+  const _SubscriptionInvoiceTile({
+    required this.invoice,
+    required this.formatVnd,
+  });
+
+  final SubscriptionInvoice invoice;
+  final String Function(int) formatVnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final displayNumber = invoice.number ??
+        (invoice.id.length >= 12
+            ? invoice.id.substring(invoice.id.length - 12)
+            : invoice.id);
+    final dateStr = DateTime.tryParse(invoice.date) != null
+        ? '${DateTime.parse(invoice.date).day.toString().padLeft(2, '0')}.${DateTime.parse(invoice.date).month.toString().padLeft(2, '0')}.${DateTime.parse(invoice.date).year}'
+        : invoice.date;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            displayNumber,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Text(
+          dateStr,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          invoice.currency == 'VND'
+              ? formatVnd(invoice.amount.round())
+              : '${invoice.amount.toStringAsFixed(2)} ${invoice.currency}',
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _BillingHistorySection extends StatelessWidget {
   final List<SubscriptionInvoice> invoices;
   final String Function(int) formatVnd;
@@ -549,53 +597,15 @@ class _BillingHistorySection extends StatelessWidget {
               ),
             )
           else
-            ...invoices.take(10).map((inv) {
-              final displayNumber =
-                  inv.number ??
-                  (inv.id.length >= 12
-                      ? inv.id.substring(inv.id.length - 12)
-                      : inv.id);
-              final dateStr = DateTime.tryParse(inv.date) != null
-                  ? '${DateTime.parse(inv.date).day.toString().padLeft(2, '0')}.${DateTime.parse(inv.date).month.toString().padLeft(2, '0')}.${DateTime.parse(inv.date).year}'
-                  : inv.date;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        displayNumber,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+            ...invoices.take(10).map(
+                  (inv) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _SubscriptionInvoiceTile(
+                      invoice: inv,
+                      formatVnd: formatVnd,
                     ),
-                    Text(
-                      dateStr,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      inv.currency == 'VND'
-                          ? formatVnd(inv.amount.round())
-                          : '${inv.amount.toStringAsFixed(2)} ${inv.currency}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              );
-            }),
           const SizedBox(height: 8),
           Center(
             child: TextButton(
@@ -868,7 +878,7 @@ class _PlanCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ..._featureLabels.map(
+          ..._featureLabels(context.read<LocaleProvider>()).map(
             (f) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
@@ -904,14 +914,16 @@ class _PlanCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(
-                checkoutLoading != null ? 'Загрузка...' : 'Оформить подписку',
+                checkoutLoading != null
+                    ? context.read<LocaleProvider>().t('common.loading')
+                    : context.read<LocaleProvider>().t('subscription.subscribe'),
               ),
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Без долгосрочных обязательств. Отмена в любой момент.',
-            style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+          Text(
+            context.read<LocaleProvider>().t('subscription.noLongTerm'),
+            style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
             textAlign: TextAlign.center,
           ),
         ],

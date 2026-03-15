@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../../constants/colors.dart';
 import '../../models/booking.dart';
 import '../../utils/currency_format.dart';
@@ -59,48 +60,9 @@ class _BookingDetailContent extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Header
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: AppColors.borderPrimary),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Booking Details',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: AppColors.neutral200,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '✕',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              BookingDetailHeader(
+                title: 'Booking Details',
+                onClose: () => Navigator.of(context).pop(),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -109,14 +71,12 @@ class _BookingDetailContent extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Status
-                      _buildStatusBadge(booking.status),
+                      _BookingDetailStatusBadge(status: booking.status),
                       const SizedBox(height: 20),
-                      // Client Info
-                      _buildSection(
-                        'Client',
-                        booking.user?.name ?? 'Unknown Client',
-                        [
+                      BookingDetailSection(
+                        title: 'Client',
+                        mainText: booking.user?.name ?? 'Unknown Client',
+                        subTexts: [
                           if (booking.user?.email != null &&
                               booking.user!.email!.isNotEmpty)
                             booking.user!.email!,
@@ -126,11 +86,11 @@ class _BookingDetailContent extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      // Service Info
-                      _buildSection(
-                        'Service',
-                        booking.service?.name ?? 'Unknown Service',
-                        [
+                      BookingDetailSection(
+                        title: 'Service',
+                        mainText:
+                            booking.service?.name ?? 'Unknown Service',
+                        subTexts: [
                           if (booking.service?.duration != null)
                             'Duration: ${booking.service!.duration} minutes',
                           if (booking.service?.price != null &&
@@ -139,178 +99,42 @@ class _BookingDetailContent extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      // Date & Time
-                      _buildSection(
-                        'Date & Time',
-                        DateFormat('EEEE, dd/MM/yyyy').format(booking.dateTime),
-                        [DateFormat('HH:mm').format(booking.dateTime)],
+                      BookingDetailSection(
+                        title: 'Date & Time',
+                        mainText: DateFormat('EEEE, dd/MM/yyyy')
+                            .format(booking.dateTime),
+                        subTexts: [
+                          DateFormat('HH:mm').format(booking.dateTime),
+                        ],
                       ),
-                      const SizedBox(height: 20),
-                      // Staff
-                      if (booking.staff != null)
-                        _buildSection('Staff', booking.staff!.name, []),
-                      if (booking.staff != null) const SizedBox(height: 20),
-                      // Notes
-                      if (booking.notes != null && booking.notes!.isNotEmpty)
-                        _buildSection('Notes', booking.notes!, []),
+                      if (booking.staff != null) ...[
+                        const SizedBox(height: 20),
+                        BookingDetailSection(
+                          title: 'Staff',
+                          mainText: booking.staff!.name,
+                          subTexts: [],
+                        ),
+                      ],
+                      if (booking.notes != null &&
+                          booking.notes!.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        BookingDetailSection(
+                          title: 'Notes',
+                          mainText: booking.notes!,
+                          subTexts: [],
+                        ),
+                      ],
                     ],
                   ),
                 ),
               ),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: AppColors.borderPrimary),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    if (booking.status == BookingStatus.pending)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                onConfirm?.call(booking.id);
-                                Navigator.of(context).pop();
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.success500,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text(
-                                'Confirm',
-                                style: TextStyle(
-                                  color: AppColors.textInverse,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                onReject?.call(booking.id);
-                                Navigator.of(context).pop();
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.error500,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text(
-                                'Reject',
-                                style: TextStyle(
-                                  color: AppColors.textInverse,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (booking.status == BookingStatus.pending)
-                      const SizedBox(height: 12),
-                    if (booking.status == BookingStatus.confirmed ||
-                        booking.status == BookingStatus.pending)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                onEdit?.call(booking);
-                                Navigator.of(context).pop();
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary500,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text(
-                                'Изменить',
-                                style: TextStyle(
-                                  color: AppColors.textInverse,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                final confirmed = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('Отменить запись?'),
-                                    content: const Text(
-                                      'Запись будет отменена. Клиент может получить уведомление.',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(ctx, false),
-                                        child: const Text('Нет'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(ctx, true),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: Colors.red,
-                                        ),
-                                        child: const Text('Да, отменить'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                if (confirmed == true) {
-                                  onCancel?.call(booking.id);
-                                  if (context.mounted)
-                                    Navigator.of(context).pop();
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.neutral500,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text(
-                                'Отменить запись',
-                                style: TextStyle(
-                                  color: AppColors.textInverse,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
+              _BookingDetailActions(
+                booking: booking,
+                onEdit: onEdit,
+                onCancel: onCancel,
+                onConfirm: onConfirm,
+                onReject: onReject,
+                onClose: () => Navigator.of(context).pop(),
               ),
             ],
           ),
@@ -318,8 +142,126 @@ class _BookingDetailContent extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildStatusBadge(BookingStatus status) {
+/// Reusable header for booking detail modal: title + close button.
+class BookingDetailHeader extends StatelessWidget {
+  const BookingDetailHeader({
+    super.key,
+    required this.title,
+    required this.onClose,
+  });
+
+  final String title;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.borderPrimary),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          GestureDetector(
+            onTap: onClose,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.neutral200,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Center(
+                child: Text(
+                  '✕',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Section with title and main/sub lines.
+class BookingDetailSection extends StatelessWidget {
+  const BookingDetailSection({
+    super.key,
+    required this.title,
+    required this.mainText,
+    this.subTexts = const [],
+  });
+
+  final String title;
+  final String mainText;
+  final List<String> subTexts;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.textTertiary,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          mainText,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        ...subTexts.map(
+          (text) => Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BookingDetailStatusBadge extends StatelessWidget {
+  const _BookingDetailStatusBadge({required this.status});
+
+  final BookingStatus status;
+
+  @override
+  Widget build(BuildContext context) {
     Color bgColor;
     Color textColor;
     String label;
@@ -368,42 +310,169 @@ class _BookingDetailContent extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildSection(String title, String mainText, List<String> subTexts) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.textTertiary,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.5,
-          ),
+class _BookingDetailActions extends StatelessWidget {
+  const _BookingDetailActions({
+    required this.booking,
+    this.onEdit,
+    this.onCancel,
+    this.onConfirm,
+    this.onReject,
+    required this.onClose,
+  });
+
+  final Booking booking;
+  final Function(Booking)? onEdit;
+  final Function(String)? onCancel;
+  final Function(String)? onConfirm;
+  final Function(String)? onReject;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: AppColors.borderPrimary),
         ),
-        const SizedBox(height: 4),
-        Text(
-          mainText,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        ...subTexts.map(
-          (text) => Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+      ),
+      child: Column(
+        children: [
+          if (booking.status == BookingStatus.pending)
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      onConfirm?.call(booking.id);
+                      onClose();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.success500,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Confirm',
+                      style: TextStyle(
+                        color: AppColors.textInverse,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      onReject?.call(booking.id);
+                      onClose();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.error500,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Reject',
+                      style: TextStyle(
+                        color: AppColors.textInverse,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ),
-      ],
+          if (booking.status == BookingStatus.pending) const SizedBox(height: 12),
+          if (booking.status == BookingStatus.confirmed ||
+              booking.status == BookingStatus.pending)
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      onEdit?.call(booking);
+                      onClose();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary500,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Изменить',
+                      style: TextStyle(
+                        color: AppColors.textInverse,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Отменить запись?'),
+                          content: const Text(
+                            'Запись будет отменена. Клиент может получить уведомление.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: const Text('Нет'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
+                              child: const Text('Да, отменить'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        onCancel?.call(booking.id);
+                        if (context.mounted) onClose();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.neutral500,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Отменить запись',
+                      style: TextStyle(
+                        color: AppColors.textInverse,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../constants/colors.dart';
+import '../l10n/locale_provider.dart';
 import '../models/subscription.dart';
 import '../services/auth_service.dart';
 import '../services/cache/salon_cache.dart';
@@ -98,23 +99,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundSecondary,
-      appBar: AppBar(
-        title: const Text(
-          'Профиль',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+    return Consumer<LocaleProvider>(
+      builder: (context, locale, _) {
+        return Scaffold(
+          backgroundColor: AppColors.backgroundSecondary,
+          appBar: AppBar(
+            title: Text(
+              locale.t('profile.title'),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            centerTitle: true,
+            backgroundColor: AppColors.backgroundPrimary,
+            foregroundColor: AppColors.textPrimary,
+            elevation: 0,
           ),
-        ),
-        centerTitle: true,
-        backgroundColor: AppColors.backgroundPrimary,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
+          body: SingleChildScrollView(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -125,6 +128,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 

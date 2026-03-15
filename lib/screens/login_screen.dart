@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../constants/colors.dart';
+import '../l10n/locale_provider.dart';
 import '../services/auth_service.dart';
+import '../utils/show_api_error.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,22 +44,17 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isSubmitting = false);
 
     if (result.success) {
-      // Переход на дашборд произойдёт автоматически через AuthWrapper
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Вход выполнен'),
-            backgroundColor: Colors.green,
-          ),
+        showSuccess(
+          context,
+          context.read<LocaleProvider>().t('auth.signInSuccess'),
         );
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.error ?? 'Ошибка входа'),
-            backgroundColor: Colors.red,
-          ),
+        showApiError(
+          context,
+          result.error ?? context.read<LocaleProvider>().t('auth.signInError'),
         );
       }
     }
@@ -75,17 +72,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (result.success) {
       if (mounted) {
+        final locale = context.read<LocaleProvider>();
         final email = auth.user?.email ?? '—';
         showDialog<void>(
           context: context,
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
-            title: const Text('Hello'),
-            content: Text('Вход выполнен.\n$email'),
+            title: Text(locale.t('auth.signInSuccess')),
+            content: Text('${locale.t('auth.signInSuccess')}\n$email'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('OK'),
+                child: Text(locale.t('common.close')),
               ),
             ],
           ),
@@ -93,27 +91,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } else {
       if (mounted && result.error != null && result.error!.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: SingleChildScrollView(
-              child: Text(result.error!),
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 8),
-            action: SnackBarAction(
-              label: 'OK',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
+        showApiError(context, result.error!);
       } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ошибка входа. Подробности в логах (Terminal).'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
-          ),
+        showApiError(
+          context,
+          context.read<LocaleProvider>().t('auth.signInError'),
         );
       }
     }
@@ -147,128 +129,139 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Панель владельца',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
+                  Consumer<LocaleProvider>(
+                    builder: (context, locale, _) => Text(
+                      locale.t('auth.ownerPanel'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'example@mail.com',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Введите email';
-                      if (!v.contains('@')) return 'Некорректный email';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _submit(),
-                    decoration: InputDecoration(
-                      labelText: 'Пароль',
-                      hintText: '••••••••',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
+                  Consumer<LocaleProvider>(
+                    builder: (context, locale, _) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          decoration: InputDecoration(
+                            labelText: locale.t('auth.email'),
+                            hintText: 'example@mail.com',
+                            prefixIcon: const Icon(Icons.email_outlined),
+                            border: const OutlineInputBorder(),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return locale.t('auth.enterEmail');
+                            if (!v.contains('@')) return locale.t('auth.invalidEmail');
+                            return null;
+                          },
                         ),
-                        onPressed: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                      ),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Введите пароль';
-                      if (v.length < 6) return 'Минимум 6 символов';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32),
-                  FilledButton(
-                    onPressed: _isSubmitting ? null : _submit,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary500,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _submit(),
+                          decoration: InputDecoration(
+                            labelText: locale.t('auth.password'),
+                            hintText: '••••••••',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            border: const OutlineInputBorder(),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                              ),
+                              onPressed: () {
+                                setState(() => _obscurePassword = !_obscurePassword);
+                              },
                             ),
-                          )
-                        : const Text(
-                            'Войти',
-                            style: TextStyle(
+                          ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return locale.t('auth.enterPassword');
+                            if (v.length < 6) return locale.t('auth.passwordMin');
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 32),
+                        FilledButton(
+                          onPressed: _isSubmitting ? null : _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primary500,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(
+                                  locale.t('auth.signIn'),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                locale.t('auth.orContinue'),
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        OutlinedButton.icon(
+                          onPressed: (_isSubmitting || _isGoogleLoading)
+                              ? null
+                              : _submitGoogle,
+                          icon: _isGoogleLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : _buildGoogleIcon(),
+                          label: Text(
+                            _isGoogleLoading
+                                ? locale.t('common.loading')
+                                : locale.t('auth.continueWithGoogle'),
+                            style: const TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'или',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: Colors.grey.shade400),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  OutlinedButton.icon(
-                    onPressed: (_isSubmitting || _isGoogleLoading)
-                        ? null
-                        : _submitGoogle,
-                    icon: _isGoogleLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : _buildGoogleIcon(),
-                    label: Text(
-                      _isGoogleLoading ? 'Вход...' : 'Войти через Google',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: Colors.grey.shade400),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      ],
                     ),
                   ),
                 ],

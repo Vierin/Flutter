@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
+import '../../l10n/locale_provider.dart';
 import '../../models/booking.dart';
+import '../../utils/show_api_error.dart';
 import '../../models/salon.dart';
 import '../../utils/auth_load_helper.dart';
 import '../../services/auth_service.dart';
@@ -35,36 +37,25 @@ enum BookingAction {
     }
   }
 
-  String get successMessage {
+  String successMessage(LocaleProvider locale) {
     switch (this) {
       case confirm:
-        return 'Бронирование подтверждено';
+        return locale.t('booking.confirmed');
       case cancel:
-        return 'Запись отменена';
+        return locale.t('booking.cancelled');
       case reject:
-        return 'Бронирование отклонено';
+        return locale.t('booking.rejected');
     }
   }
 
-  String get failureMessage {
+  String failureMessage(LocaleProvider locale) {
     switch (this) {
       case confirm:
-        return 'Не удалось подтвердить бронирование';
+        return locale.t('booking.failedToConfirm');
       case cancel:
-        return 'Ошибка отмены';
+        return locale.t('booking.failedToCancel');
       case reject:
-        return 'Не удалось отклонить бронирование';
-    }
-  }
-
-  String get errorShort {
-    switch (this) {
-      case confirm:
-        return 'Ошибка подтверждения';
-      case cancel:
-        return 'Ошибка отмены';
-      case reject:
-        return 'Ошибка отклонения';
+        return locale.t('booking.failedToReject');
     }
   }
 
@@ -129,12 +120,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _bookings = [];
           _isLoading = false;
         });
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            content: Text('Не удалось загрузить данные: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showApiError(context, e);
       }
     }
   }
@@ -152,31 +138,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (ok) {
         context.read<BookingsCache>().invalidate();
         await _loadData();
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            content: Text(action.successMessage),
-            backgroundColor: action.snackBarColor,
-          ),
+        showSuccess(
+          context,
+          action.successMessage(context.read<LocaleProvider>()),
+          backgroundColor: action.snackBarColor,
         );
       } else {
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            content: Text(action.failureMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showApiError(context, action.failureMessage(context.read<LocaleProvider>()));
       }
     } catch (e) {
       if (!mounted) return;
-      final message = e is Exception
-          ? e.toString().replaceFirst('Exception: ', '')
-          : e.toString();
-      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-        SnackBar(
-          content: Text(message.length > 80 ? action.errorShort : message),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showApiError(context, e);
     }
   }
 
