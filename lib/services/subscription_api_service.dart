@@ -24,10 +24,7 @@ class SubscriptionApiService {
     String accessToken,
   ) async {
     try {
-      final body = await ApiClient.get(
-        '/subscriptions/invoices',
-        accessToken,
-      );
+      final body = await ApiClient.get('/subscriptions/invoices', accessToken);
       if (body is! Map<String, dynamic>) return [];
       final list = body['invoices'];
       if (list is! List) return [];
@@ -50,11 +47,13 @@ class SubscriptionApiService {
     SubscriptionInterval interval,
   ) async {
     try {
-      final body = await ApiClient.post(
-        '/subscriptions/create-checkout-session',
-        accessToken,
-        body: {'interval': interval},
-      ) as Map<String, dynamic>?;
+      final body =
+          await ApiClient.post(
+                '/subscriptions/create-checkout-session',
+                accessToken,
+                body: {'interval': interval},
+              )
+              as Map<String, dynamic>?;
       return body?['url'] as String?;
     } on ApiException catch (e) {
       if (kDebugMode) debugPrint('[SubscriptionAPI] createCheckoutSession: $e');
@@ -65,10 +64,12 @@ class SubscriptionApiService {
   /// POST /subscriptions/create-portal-session — URL портала Stripe.
   static Future<String?> createPortalSession(String accessToken) async {
     try {
-      final body = await ApiClient.post(
-        '/subscriptions/create-portal-session',
-        accessToken,
-      ) as Map<String, dynamic>?;
+      final body =
+          await ApiClient.post(
+                '/subscriptions/create-portal-session',
+                accessToken,
+              )
+              as Map<String, dynamic>?;
       return body?['url'] as String?;
     } on ApiException catch (e) {
       if (kDebugMode) debugPrint('[SubscriptionAPI] createPortalSession: $e');

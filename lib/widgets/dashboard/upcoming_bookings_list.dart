@@ -104,12 +104,12 @@ class _UpcomingBookingsListState extends State<UpcomingBookingsList> {
                               color: AppColors.primary500,
                             ),
                             tooltip: locale.t('dashboard.allBookings'),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 36,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 36,
+                              minHeight: 36,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),

@@ -30,11 +30,9 @@ class DashboardApiService {
     String accessToken,
     Map<String, dynamic> payload,
   ) async {
-    final data = await ApiClient.put(
-      '/salons/current',
-      accessToken,
-      body: payload,
-    ) as Map<String, dynamic>?;
+    final data =
+        await ApiClient.put('/salons/current', accessToken, body: payload)
+            as Map<String, dynamic>?;
     if (data == null) throw ApiException('Invalid response');
     return Salon.fromJson(data);
   }
@@ -44,17 +42,17 @@ class DashboardApiService {
     String accessToken,
     Map<String, dynamic> payload,
   ) async {
-    final data = await ApiClient.post(
-      '/salons/current',
-      accessToken,
-      body: payload,
-    ) as Map<String, dynamic>?;
+    final data =
+        await ApiClient.post('/salons/current', accessToken, body: payload)
+            as Map<String, dynamic>?;
     if (data == null) throw ApiException('Invalid response');
     return Salon.fromJson(data);
   }
 
   /// GET /subscriptions/current — текущая подписка владельца.
-  static Future<Subscription?> getCurrentSubscription(String accessToken) async {
+  static Future<Subscription?> getCurrentSubscription(
+    String accessToken,
+  ) async {
     try {
       final body = await ApiClient.get('/subscriptions/current', accessToken);
       if (body is! Map<String, dynamic>) return null;
@@ -87,7 +85,10 @@ class DashboardApiService {
   }
 
   /// PUT /bookings/:id/confirm — подтвердить бронирование.
-  static Future<bool> confirmBooking(String accessToken, String bookingId) async {
+  static Future<bool> confirmBooking(
+    String accessToken,
+    String bookingId,
+  ) async {
     await ApiClient.put('/bookings/$bookingId/confirm', accessToken);
     return true;
   }
@@ -115,7 +116,8 @@ class DashboardApiService {
           try {
             result.add(TimeBlock.fromJson(Map<String, dynamic>.from(item)));
           } catch (e) {
-            if (kDebugMode) debugPrint('[DashboardAPI] timeBlock parse error: $e');
+            if (kDebugMode)
+              debugPrint('[DashboardAPI] timeBlock parse error: $e');
           }
         }
       }
@@ -144,29 +146,36 @@ class DashboardApiService {
       'time': timeIso,
       if (staffId != null && staffId.isNotEmpty) 'staffId': staffId,
       if (clientName != null && clientName.isNotEmpty) 'clientName': clientName,
-      if (clientPhone != null && clientPhone.isNotEmpty) 'clientPhone': clientPhone,
-      if (clientEmail != null && clientEmail.isNotEmpty) 'clientEmail': clientEmail,
+      if (clientPhone != null && clientPhone.isNotEmpty)
+        'clientPhone': clientPhone,
+      if (clientEmail != null && clientEmail.isNotEmpty)
+        'clientEmail': clientEmail,
       if (notes != null && notes.isNotEmpty) 'notes': notes,
     };
-    final data = await ApiClient.post(
-      '/bookings',
-      accessToken,
-      body: body,
-    ) as Map<String, dynamic>?;
+    final data =
+        await ApiClient.post('/bookings', accessToken, body: body)
+            as Map<String, dynamic>?;
     if (data == null) throw ApiException('Invalid response');
     final booking = data['booking'];
-    if (booking is! Map<String, dynamic>) throw ApiException('No booking in response');
+    if (booking is! Map<String, dynamic>)
+      throw ApiException('No booking in response');
     return _bookingFromApi(Map<String, dynamic>.from(booking));
   }
 
   /// PUT /bookings/:id/reject — отклонить бронирование.
-  static Future<bool> rejectBooking(String accessToken, String bookingId) async {
+  static Future<bool> rejectBooking(
+    String accessToken,
+    String bookingId,
+  ) async {
     await ApiClient.put('/bookings/$bookingId/reject', accessToken);
     return true;
   }
 
   /// PUT /bookings/:id/cancel — отменить бронирование.
-  static Future<bool> cancelBooking(String accessToken, String bookingId) async {
+  static Future<bool> cancelBooking(
+    String accessToken,
+    String bookingId,
+  ) async {
     await ApiClient.put('/bookings/$bookingId/cancel', accessToken);
     return true;
   }
@@ -182,19 +191,23 @@ class DashboardApiService {
     String? status,
   }) async {
     final body = <String, dynamic>{};
-    if (serviceId != null && serviceId.isNotEmpty) body['serviceId'] = serviceId;
+    if (serviceId != null && serviceId.isNotEmpty)
+      body['serviceId'] = serviceId;
     if (staffId != null && staffId.isNotEmpty) body['staffId'] = staffId;
     if (timeIso != null && timeIso.isNotEmpty) body['time'] = timeIso;
     if (notes != null) body['notes'] = notes;
     if (status != null && status.isNotEmpty) body['status'] = status;
-    final data = await ApiClient.put(
-      '/bookings/$bookingId',
-      accessToken,
-      body: body.isEmpty ? null : body,
-    ) as Map<String, dynamic>?;
+    final data =
+        await ApiClient.put(
+              '/bookings/$bookingId',
+              accessToken,
+              body: body.isEmpty ? null : body,
+            )
+            as Map<String, dynamic>?;
     if (data == null) throw ApiException('Invalid response');
     final booking = data['booking'];
-    if (booking is! Map<String, dynamic>) throw ApiException('No booking in response');
+    if (booking is! Map<String, dynamic>)
+      throw ApiException('No booking in response');
     return _bookingFromApi(Map<String, dynamic>.from(booking));
   }
 

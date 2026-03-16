@@ -1,5 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show debugPrint, kDebugMode, defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -30,12 +31,14 @@ class PushNotificationService {
   );
 
   /// Called when a notification is received (foreground) or app opened from notification.
-  static void Function(String title, String body, Map<String, String> data)? onNotificationReceived;
+  static void Function(String title, String body, Map<String, String> data)?
+  onNotificationReceived;
 
   /// Initialize: request permission, get token, set up message handlers.
   /// [onNotificationReceived] is called for each received message so the app can show them in the notifications screen.
   static Future<void> initialize({
-    void Function(String title, String body, Map<String, String> data)? onNotificationReceived,
+    void Function(String title, String body, Map<String, String> data)?
+    onNotificationReceived,
   }) async {
     PushNotificationService.onNotificationReceived = onNotificationReceived;
     _log('initialize start');
@@ -55,8 +58,10 @@ class PushNotificationService {
       );
       _log('local notifications initialized');
       if (defaultTargetPlatform == TargetPlatform.android) {
-        final androidPlugin = _localNotifications.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+        final androidPlugin = _localNotifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
         await androidPlugin?.createNotificationChannel(_channel);
         _log('Android channel henzo_default created');
       }
@@ -129,11 +134,7 @@ class PushNotificationService {
       await ApiClient.post(
         '/notifications/push-token',
         accessToken,
-        body: {
-          'token': token,
-          'platform': platform,
-          'language': language,
-        },
+        body: {'token': token, 'platform': platform, 'language': language},
       );
       _log('registerToken OK: backend saved token');
       if (kDebugMode) debugPrint('$_tag FCM token (copy for test): $token');
@@ -149,14 +150,20 @@ class PushNotificationService {
     return data.map((k, v) => MapEntry(k, v?.toString() ?? ''));
   }
 
-  static void _notifyReceived(String title, String body, Map<String, String> data) {
+  static void _notifyReceived(
+    String title,
+    String body,
+    Map<String, String> data,
+  ) {
     try {
       onNotificationReceived?.call(title, body, data);
     } catch (_) {}
   }
 
   static void _onForegroundMessage(RemoteMessage message) {
-    _log('onMessage (foreground): title=${message.notification?.title} body=${message.notification?.body}');
+    _log(
+      'onMessage (foreground): title=${message.notification?.title} body=${message.notification?.body}',
+    );
     final title = message.notification?.title ?? 'Henzo';
     final body = message.notification?.body ?? '';
     if (title.isEmpty && body.isEmpty) {
@@ -194,7 +201,13 @@ class PushNotificationService {
       ),
     );
     try {
-      await _localNotifications.show(id, title, body, details, payload: payload);
+      await _localNotifications.show(
+        id,
+        title,
+        body,
+        details,
+        payload: payload,
+      );
       _log('local notification shown: $title');
     } catch (e) {
       _log('local notification show error: $e');

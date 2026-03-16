@@ -119,7 +119,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         await _openUrl(url);
       } else if (mounted) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text(context.read<LocaleProvider>().t('subscription.noBilling'))),
+          SnackBar(
+            content: Text(
+              context.read<LocaleProvider>().t('subscription.noBilling'),
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -224,61 +228,64 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                             color: AppColors.textSecondary,
                           ),
                         ),
-                    const SizedBox(height: 20),
-                    // Триал-баннер
-                    if (_subscription?.trialEndDate != null && !_isPaid) ...[
-                      _TrialBanner(
-                        trialEndDateFormatted:
-                            _formatDate(_subscription!.trialEndDate) ?? '',
-                        onGoToPlan: () => _handleSelectPlan('monthly'),
-                        isLoading: _checkoutLoading != null,
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                    // Оплаченная подписка
-                    if (_isPaid) ...[
-                      _PaidPlanCard(
-                        subscription: _subscription!,
-                        formatDate: _formatDate,
-                        formatVnd: _formatVnd,
-                        onTap: _handleManageBilling,
-                        portalLoading: _portalLoading,
-                      ),
-                      const SizedBox(height: 12),
-                      _BillingHistorySection(
-                        invoices: _invoices,
-                        formatVnd: _formatVnd,
-                        onManageBilling: _handleManageBilling,
-                        portalLoading: _portalLoading,
-                      ),
-                      const SizedBox(height: 12),
-                      _AccountActionsCard(
-                        onManageBilling: _handleManageBilling,
-                        onCancel: _subscription?.status != 'CANCELLED'
-                            ? _handleCancelSubscription
-                            : null,
-                        portalLoading: _portalLoading,
-                        cancelLoading: _cancelLoading,
-                      ),
-                    ],
-                    // Выбор плана (нет оплаты)
-                    if (!_isPaid) ...[
-                      _BillingToggle(
-                        billingInterval: _billingInterval,
-                        onChanged: (v) => setState(() => _billingInterval = v),
-                      ),
-                      const SizedBox(height: 16),
-                      _PlanCard(
-                        isAnnual: _billingInterval == 'annual',
-                        onSubscribe: () => _handleSelectPlan(_billingInterval),
-                        checkoutLoading: _checkoutLoading,
-                        formatVnd: _formatVnd,
-                      ),
-                    ],
-                  ],
+                        const SizedBox(height: 20),
+                        // Триал-баннер
+                        if (_subscription?.trialEndDate != null &&
+                            !_isPaid) ...[
+                          _TrialBanner(
+                            trialEndDateFormatted:
+                                _formatDate(_subscription!.trialEndDate) ?? '',
+                            onGoToPlan: () => _handleSelectPlan('monthly'),
+                            isLoading: _checkoutLoading != null,
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                        // Оплаченная подписка
+                        if (_isPaid) ...[
+                          _PaidPlanCard(
+                            subscription: _subscription!,
+                            formatDate: _formatDate,
+                            formatVnd: _formatVnd,
+                            onTap: _handleManageBilling,
+                            portalLoading: _portalLoading,
+                          ),
+                          const SizedBox(height: 12),
+                          _BillingHistorySection(
+                            invoices: _invoices,
+                            formatVnd: _formatVnd,
+                            onManageBilling: _handleManageBilling,
+                            portalLoading: _portalLoading,
+                          ),
+                          const SizedBox(height: 12),
+                          _AccountActionsCard(
+                            onManageBilling: _handleManageBilling,
+                            onCancel: _subscription?.status != 'CANCELLED'
+                                ? _handleCancelSubscription
+                                : null,
+                            portalLoading: _portalLoading,
+                            cancelLoading: _cancelLoading,
+                          ),
+                        ],
+                        // Выбор плана (нет оплаты)
+                        if (!_isPaid) ...[
+                          _BillingToggle(
+                            billingInterval: _billingInterval,
+                            onChanged: (v) =>
+                                setState(() => _billingInterval = v),
+                          ),
+                          const SizedBox(height: 16),
+                          _PlanCard(
+                            isAnnual: _billingInterval == 'annual',
+                            onSubscribe: () =>
+                                _handleSelectPlan(_billingInterval),
+                            checkoutLoading: _checkoutLoading,
+                            formatVnd: _formatVnd,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
         );
       },
     );
@@ -496,7 +503,8 @@ class _SubscriptionInvoiceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayNumber = invoice.number ??
+    final displayNumber =
+        invoice.number ??
         (invoice.id.length >= 12
             ? invoice.id.substring(invoice.id.length - 12)
             : invoice.id);
@@ -519,10 +527,7 @@ class _SubscriptionInvoiceTile extends StatelessWidget {
         ),
         Text(
           dateStr,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
+          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
         ),
         const SizedBox(width: 8),
         Text(
@@ -597,7 +602,9 @@ class _BillingHistorySection extends StatelessWidget {
               ),
             )
           else
-            ...invoices.take(10).map(
+            ...invoices
+                .take(10)
+                .map(
                   (inv) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: _SubscriptionInvoiceTile(
@@ -916,7 +923,9 @@ class _PlanCard extends StatelessWidget {
               child: Text(
                 checkoutLoading != null
                     ? context.read<LocaleProvider>().t('common.loading')
-                    : context.read<LocaleProvider>().t('subscription.subscribe'),
+                    : context.read<LocaleProvider>().t(
+                        'subscription.subscribe',
+                      ),
               ),
             ),
           ),

@@ -78,7 +78,10 @@ class _LanguageSelectorModalContent extends StatelessWidget {
                     if (context.mounted) Navigator.of(context).pop();
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
@@ -86,13 +89,21 @@ class _LanguageSelectorModalContent extends StatelessWidget {
                             _languageLabels[code] ?? code.toUpperCase(),
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: locale.localeCode == code ? FontWeight.w600 : FontWeight.w500,
-                              color: locale.localeCode == code ? AppColors.primary500 : AppColors.textPrimary,
+                              fontWeight: locale.localeCode == code
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: locale.localeCode == code
+                                  ? AppColors.primary500
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ),
                         if (locale.localeCode == code)
-                          Icon(Icons.check_circle, size: 22, color: AppColors.primary500),
+                          Icon(
+                            Icons.check_circle,
+                            size: 22,
+                            color: AppColors.primary500,
+                          ),
                       ],
                     ),
                   ),

@@ -279,11 +279,8 @@ class _SalonLoadingCurtain extends StatelessWidget {
                   height: 80,
                   width: 160,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.store,
-                    size: 80,
-                    color: AppColors.primary500,
-                  ),
+                  errorBuilder: (_, __, ___) =>
+                      Icon(Icons.store, size: 80, color: AppColors.primary500),
                 ),
                 const SizedBox(height: 24),
                 Text(

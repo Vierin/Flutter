@@ -88,8 +88,7 @@ class _BookingDetailContent extends StatelessWidget {
                       const SizedBox(height: 20),
                       BookingDetailSection(
                         title: 'Service',
-                        mainText:
-                            booking.service?.name ?? 'Unknown Service',
+                        mainText: booking.service?.name ?? 'Unknown Service',
                         subTexts: [
                           if (booking.service?.duration != null)
                             'Duration: ${booking.service!.duration} minutes',
@@ -101,8 +100,9 @@ class _BookingDetailContent extends StatelessWidget {
                       const SizedBox(height: 20),
                       BookingDetailSection(
                         title: 'Date & Time',
-                        mainText: DateFormat('EEEE, dd/MM/yyyy')
-                            .format(booking.dateTime),
+                        mainText: DateFormat(
+                          'EEEE, dd/MM/yyyy',
+                        ).format(booking.dateTime),
                         subTexts: [
                           DateFormat('HH:mm').format(booking.dateTime),
                         ],
@@ -161,9 +161,7 @@ class BookingDetailHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.borderPrimary),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.borderPrimary)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -335,9 +333,7 @@ class _BookingDetailActions extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(0, 16, 16, 16),
       decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.borderPrimary),
-        ),
+        border: Border(top: BorderSide(color: AppColors.borderPrimary)),
       ),
       child: Column(
         children: [
@@ -393,7 +389,8 @@ class _BookingDetailActions extends StatelessWidget {
                 ),
               ],
             ),
-          if (booking.status == BookingStatus.pending) const SizedBox(height: 12),
+          if (booking.status == BookingStatus.pending)
+            const SizedBox(height: 12),
           if (booking.status == BookingStatus.confirmed ||
               booking.status == BookingStatus.pending)
             Row(

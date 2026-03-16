@@ -8,8 +8,8 @@ void showApiError(BuildContext context, dynamic e, {Color? backgroundColor}) {
   final message = e is ApiException
       ? e.message
       : e is Exception
-          ? e.toString()
-          : e?.toString() ?? 'Unknown error';
+      ? e.toString()
+      : e?.toString() ?? 'Unknown error';
   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
     SnackBar(
       content: Text(message),
@@ -19,7 +19,11 @@ void showApiError(BuildContext context, dynamic e, {Color? backgroundColor}) {
 }
 
 /// Shows a success SnackBar.
-void showSuccess(BuildContext context, String message, {Color? backgroundColor}) {
+void showSuccess(
+  BuildContext context,
+  String message, {
+  Color? backgroundColor,
+}) {
   if (!context.mounted) return;
   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
     SnackBar(

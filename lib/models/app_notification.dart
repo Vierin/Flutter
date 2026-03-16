@@ -34,13 +34,13 @@ class AppNotification {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'body': body,
-        'createdAt': createdAt.toIso8601String(),
-        'data': data,
-        'read': read,
-      };
+    'id': id,
+    'title': title,
+    'body': body,
+    'createdAt': createdAt.toIso8601String(),
+    'data': data,
+    'read': read,
+  };
 
   static AppNotification fromJson(Map<String, dynamic> json) {
     return AppNotification(
@@ -48,7 +48,8 @@ class AppNotification {
       title: json['title'] as String,
       body: json['body'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      data: (json['data'] as Map<String, dynamic>?)?.map(
+      data:
+          (json['data'] as Map<String, dynamic>?)?.map(
             (k, v) => MapEntry(k, v?.toString() ?? ''),
           ) ??
           {},

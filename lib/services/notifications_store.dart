@@ -21,7 +21,10 @@ class NotificationsStore extends ChangeNotifier {
       final raw = prefs.getString(_keyList);
       if (raw != null) {
         final list = (jsonDecode(raw) as List)
-            .map((e) => AppNotification.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) =>
+                  AppNotification.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
             .toList();
         _items = list..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       } else {

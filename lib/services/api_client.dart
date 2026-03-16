@@ -25,9 +25,7 @@ class ApiClient {
   static const Duration _timeout = Duration(seconds: 30);
 
   static Map<String, String> _headers(String? accessToken) {
-    final map = <String, String>{
-      'Content-Type': 'application/json',
-    };
+    final map = <String, String>{'Content-Type': 'application/json'};
     if (accessToken != null && accessToken.isNotEmpty) {
       map['authorization'] = 'Bearer $accessToken';
     }
@@ -58,7 +56,8 @@ class ApiClient {
     final response = await http
         .get(url, headers: _headers(accessToken))
         .timeout(_timeout);
-    if (kDebugMode) debugPrint('[ApiClient] GET $path status=${response.statusCode}');
+    if (kDebugMode)
+      debugPrint('[ApiClient] GET $path status=${response.statusCode}');
     _throwIfNotSuccess(response);
     if (response.body.isEmpty) return null;
     return json.decode(response.body);
@@ -79,7 +78,8 @@ class ApiClient {
           body: body != null ? json.encode(body) : null,
         )
         .timeout(_timeout);
-    if (kDebugMode) debugPrint('[ApiClient] POST $path status=${response.statusCode}');
+    if (kDebugMode)
+      debugPrint('[ApiClient] POST $path status=${response.statusCode}');
     _throwIfNotSuccess(response);
     if (response.body.isEmpty) return null;
     return json.decode(response.body);
@@ -100,7 +100,8 @@ class ApiClient {
           body: body != null ? json.encode(body) : null,
         )
         .timeout(_timeout);
-    if (kDebugMode) debugPrint('[ApiClient] PUT $path status=${response.statusCode}');
+    if (kDebugMode)
+      debugPrint('[ApiClient] PUT $path status=${response.statusCode}');
     _throwIfNotSuccess(response);
     if (response.body.isEmpty) return null;
     return json.decode(response.body);
@@ -113,7 +114,8 @@ class ApiClient {
     final response = await http
         .delete(url, headers: _headers(accessToken))
         .timeout(_timeout);
-    if (kDebugMode) debugPrint('[ApiClient] DELETE $path status=${response.statusCode}');
+    if (kDebugMode)
+      debugPrint('[ApiClient] DELETE $path status=${response.statusCode}');
     _throwIfNotSuccess(response);
     if (response.body.isEmpty) return null;
     return json.decode(response.body);

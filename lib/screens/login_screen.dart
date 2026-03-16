@@ -116,168 +116,183 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Center(
               child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Image.asset(
-                    'assets/logo.png',
-                    height: 56,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Text(
-                      'Henzo',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Consumer<LocaleProvider>(
-                    builder: (context, locale, _) => Text(
-                      locale.t('auth.ownerPanel'),
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey.shade600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  Consumer<LocaleProvider>(
-                    builder: (context, locale, _) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            labelText: locale.t('auth.email'),
-                            hintText: 'example@mail.com',
-                            prefixIcon: const Icon(Icons.email_outlined),
-                            border: const OutlineInputBorder(),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Image.asset(
+                        'assets/logo.png',
+                        height: 56,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Text(
+                          'Henzo',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary500,
                           ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return locale.t('auth.enterEmail');
-                            if (!v.contains('@')) return locale.t('auth.invalidEmail');
-                            return null;
-                          },
+                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          textInputAction: TextInputAction.done,
-                          onFieldSubmitted: (_) => _submit(),
-                          decoration: InputDecoration(
-                            labelText: locale.t('auth.password'),
-                            hintText: '••••••••',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            border: const OutlineInputBorder(),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
+                      ),
+                      const SizedBox(height: 8),
+                      Consumer<LocaleProvider>(
+                        builder: (context, locale, _) => Text(
+                          locale.t('auth.ownerPanel'),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+                      Consumer<LocaleProvider>(
+                        builder: (context, locale, _) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: locale.t('auth.email'),
+                                hintText: 'example@mail.com',
+                                prefixIcon: const Icon(Icons.email_outlined),
+                                border: const OutlineInputBorder(),
                               ),
-                              onPressed: () {
-                                setState(() => _obscurePassword = !_obscurePassword);
+                              validator: (v) {
+                                if (v == null || v.isEmpty)
+                                  return locale.t('auth.enterEmail');
+                                if (!v.contains('@'))
+                                  return locale.t('auth.invalidEmail');
+                                return null;
                               },
                             ),
-                          ),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return locale.t('auth.enterPassword');
-                            if (v.length < 6) return locale.t('auth.passwordMin');
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 32),
-                        FilledButton(
-                          onPressed: _isSubmitting ? null : _submit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.primary500,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _submit(),
+                              decoration: InputDecoration(
+                                labelText: locale.t('auth.password'),
+                                hintText: '••••••••',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                border: const OutlineInputBorder(),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
                                   ),
-                                )
-                              : Text(
-                                  locale.t('auth.signIn'),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                                  onPressed: () {
+                                    setState(
+                                      () =>
+                                          _obscurePassword = !_obscurePassword,
+                                    );
+                                  },
+                                ),
+                              ),
+                              validator: (v) {
+                                if (v == null || v.isEmpty)
+                                  return locale.t('auth.enterPassword');
+                                if (v.length < 6)
+                                  return locale.t('auth.passwordMin');
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 32),
+                            FilledButton(
+                              onPressed: _isSubmitting ? null : _submit,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primary500,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: _isSubmitting
+                                  ? const SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      locale.t('auth.signIn'),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                const Expanded(child: Divider()),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Text(
+                                    locale.t('auth.orContinue'),
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            const Expanded(child: Divider()),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Text(
-                                locale.t('auth.orContinue'),
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 14,
+                                const Expanded(child: Divider()),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            OutlinedButton.icon(
+                              onPressed: (_isSubmitting || _isGoogleLoading)
+                                  ? null
+                                  : _submitGoogle,
+                              icon: _isGoogleLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : _buildGoogleIcon(),
+                              label: Text(
+                                _isGoogleLoading
+                                    ? locale.t('common.loading')
+                                    : locale.t('auth.continueWithGoogle'),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                side: BorderSide(color: Colors.grey.shade400),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
                             ),
-                            const Expanded(child: Divider()),
                           ],
                         ),
-                        const SizedBox(height: 24),
-                        OutlinedButton.icon(
-                          onPressed: (_isSubmitting || _isGoogleLoading)
-                              ? null
-                              : _submitGoogle,
-                          icon: _isGoogleLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : _buildGoogleIcon(),
-                          label: Text(
-                            _isGoogleLoading
-                                ? locale.t('common.loading')
-                                : locale.t('auth.continueWithGoogle'),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(color: Colors.grey.shade400),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
-          ),
             Positioned(
               top: 0,
               right: 0,
@@ -290,10 +305,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.language, size: 22, color: AppColors.textSecondary),
+                        Icon(
+                          Icons.language,
+                          size: 22,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 6),
                         Text(
-                          _languageLabels[locale.localeCode] ?? locale.localeCode.toUpperCase(),
+                          _languageLabels[locale.localeCode] ??
+                              locale.localeCode.toUpperCase(),
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.textSecondary,

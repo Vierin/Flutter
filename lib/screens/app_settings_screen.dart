@@ -59,18 +59,20 @@ class AppSettingsScreen extends StatelessWidget {
                         icon: Icons.language,
                         title: locale.t('settings.changeLanguage'),
                         onTap: () => showLanguageSelectorModal(
-                        context,
-                        locale,
-                        onLocaleSelected: (code) {
-                          final token = context.read<AuthService>().accessToken;
-                          if (token != null && token.isNotEmpty) {
-                            PushNotificationService.registerToken(
-                              accessToken: token,
-                              language: code,
-                            );
-                          }
-                        },
-                      ),
+                          context,
+                          locale,
+                          onLocaleSelected: (code) {
+                            final token = context
+                                .read<AuthService>()
+                                .accessToken;
+                            if (token != null && token.isNotEmpty) {
+                              PushNotificationService.registerToken(
+                                accessToken: token,
+                                language: code,
+                              );
+                            }
+                          },
+                        ),
                       ),
                       const SizedBox(height: 8),
                       _buildListTile(
@@ -80,7 +82,11 @@ class AppSettingsScreen extends StatelessWidget {
                         title: locale.t('settings.privacyPolicy'),
                         onTap: () {
                           ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                            SnackBar(content: Text(locale.t('settings.privacyComingSoon'))),
+                            SnackBar(
+                              content: Text(
+                                locale.t('settings.privacyComingSoon'),
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -92,7 +98,11 @@ class AppSettingsScreen extends StatelessWidget {
                         title: locale.t('settings.termsOfUse'),
                         onTap: () {
                           ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                            SnackBar(content: Text(locale.t('settings.termsComingSoon'))),
+                            SnackBar(
+                              content: Text(
+                                locale.t('settings.termsComingSoon'),
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -100,7 +110,10 @@ class AppSettingsScreen extends StatelessWidget {
                       Center(
                         child: Text(
                           locale.t('settings.version'),
-                          style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -159,7 +172,10 @@ class AppSettingsScreen extends StatelessWidget {
 
   Widget _buildQuickActions(BuildContext context, LocaleProvider locale) {
     final actions = [
-      (icon: Icons.event_note_outlined, label: locale.t('settings.howToBooking')),
+      (
+        icon: Icons.event_note_outlined,
+        label: locale.t('settings.howToBooking'),
+      ),
       (icon: Icons.person_add_outlined, label: locale.t('settings.howToStaff')),
       (icon: Icons.list_alt_outlined, label: locale.t('settings.howToService')),
       (icon: Icons.public_outlined, label: locale.t('settings.howToOnline')),

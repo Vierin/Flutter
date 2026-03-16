@@ -47,13 +47,12 @@ class StaffApiService {
         if (email != null && email.isNotEmpty) 'email': email,
         if (phone != null && phone.isNotEmpty) 'phone': phone,
         'accessLevel': accessLevel,
-        if (serviceIds != null && serviceIds.isNotEmpty) 'serviceIds': serviceIds,
+        if (serviceIds != null && serviceIds.isNotEmpty)
+          'serviceIds': serviceIds,
       };
-      final map = await ApiClient.post(
-        '/staff',
-        accessToken,
-        body: body,
-      ) as Map<String, dynamic>?;
+      final map =
+          await ApiClient.post('/staff', accessToken, body: body)
+              as Map<String, dynamic>?;
       return map != null ? StaffMember.fromJson(map) : null;
     } on ApiException catch (e) {
       if (kDebugMode) debugPrint('[StaffAPI] create: $e');
@@ -78,11 +77,13 @@ class StaffApiService {
       if (phone != null) data['phone'] = phone;
       if (accessLevel != null) data['accessLevel'] = accessLevel;
       if (serviceIds != null) data['serviceIds'] = serviceIds;
-      final map = await ApiClient.put(
-        '/staff/$id',
-        accessToken,
-        body: data.isEmpty ? null : data,
-      ) as Map<String, dynamic>?;
+      final map =
+          await ApiClient.put(
+                '/staff/$id',
+                accessToken,
+                body: data.isEmpty ? null : data,
+              )
+              as Map<String, dynamic>?;
       return map != null ? StaffMember.fromJson(map) : null;
     } on ApiException catch (e) {
       if (kDebugMode) debugPrint('[StaffAPI] update: $e');

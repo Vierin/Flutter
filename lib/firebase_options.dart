@@ -3,7 +3,8 @@
 // to connect your app to a Firebase project.
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 /// Placeholder values — run `dart run flutterfire configure` to replace.
@@ -78,5 +79,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'henzo-79a1e.firebasestorage.app',
     measurementId: 'G-ZPW16J3GYD',
   );
-
 }

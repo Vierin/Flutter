@@ -17,8 +17,8 @@ class ServicesApiService {
       final list = body is List
           ? body
           : (body is Map && body['data'] is List
-              ? body['data'] as List
-              : <dynamic>[]);
+                ? body['data'] as List
+                : <dynamic>[]);
       final result = <ServiceItem>[];
       for (final item in list) {
         if (item is! Map) continue;
@@ -45,16 +45,18 @@ class ServicesApiService {
     required int duration,
   }) async {
     try {
-      final map = await ApiClient.post(
-        '/services',
-        accessToken,
-        body: {
-          'salonId': salonId,
-          'name': name,
-          'price': price,
-          'duration': duration,
-        },
-      ) as Map<String, dynamic>?;
+      final map =
+          await ApiClient.post(
+                '/services',
+                accessToken,
+                body: {
+                  'salonId': salonId,
+                  'name': name,
+                  'price': price,
+                  'duration': duration,
+                },
+              )
+              as Map<String, dynamic>?;
       return map != null ? ServiceItem.fromJson(map) : null;
     } on ApiException catch (e) {
       if (kDebugMode) debugPrint('[ServicesAPI] create: $e');
@@ -77,11 +79,13 @@ class ServicesApiService {
       if (description != null) data['description'] = description;
       if (price != null) data['price'] = price;
       if (duration != null) data['duration'] = duration;
-      final map = await ApiClient.put(
-        '/services/$id',
-        accessToken,
-        body: data.isEmpty ? null : data,
-      ) as Map<String, dynamic>?;
+      final map =
+          await ApiClient.put(
+                '/services/$id',
+                accessToken,
+                body: data.isEmpty ? null : data,
+              )
+              as Map<String, dynamic>?;
       return map != null ? ServiceItem.fromJson(map) : null;
     } on ApiException catch (e) {
       if (kDebugMode) debugPrint('[ServicesAPI] update: $e');

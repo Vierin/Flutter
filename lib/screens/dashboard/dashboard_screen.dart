@@ -128,7 +128,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await _loadData();
   }
 
-  Future<void> _handleBookingAction(BookingAction action, String bookingId) async {
+  Future<void> _handleBookingAction(
+    BookingAction action,
+    String bookingId,
+  ) async {
     final token = context.read<AuthService>().accessToken;
     if (token == null || token.isEmpty) return;
     try {
@@ -143,7 +146,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           backgroundColor: action.snackBarColor,
         );
       } else {
-        showApiError(context, action.failureMessage(context.read<LocaleProvider>()));
+        showApiError(
+          context,
+          action.failureMessage(context.read<LocaleProvider>()),
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -203,7 +209,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: Text(
                           _isLoading || _salon == null
-                              ? context.watch<LocaleProvider>().t('nav.dashboard')
+                              ? context.watch<LocaleProvider>().t(
+                                  'nav.dashboard',
+                                )
                               : (_salon!.name ?? ''),
                           style: const TextStyle(
                             fontSize: 24,
@@ -238,7 +246,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     onTap: () => Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => const NotificationsScreen(),
+                                        builder: (_) =>
+                                            const NotificationsScreen(),
                                       ),
                                     ),
                                   ),
@@ -321,7 +330,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(
                     height: 120,
                     child: Center(
-                      child: CircularProgressIndicator(color: AppColors.primary500),
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary500,
+                      ),
                     ),
                   )
                 else if (_salon == null)
@@ -348,17 +359,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onViewAll: () =>
                           Navigator.of(context).pushNamed('/all-bookings'),
                       onEditBooking: _handleEditBooking,
-                      onCancelBooking: (id) => _handleBookingAction(BookingAction.cancel, id),
-                      onConfirmBooking: (id) => _handleBookingAction(BookingAction.confirm, id),
-                      onRejectBooking: (id) => _handleBookingAction(BookingAction.reject, id),
+                      onCancelBooking: (id) =>
+                          _handleBookingAction(BookingAction.cancel, id),
+                      onConfirmBooking: (id) =>
+                          _handleBookingAction(BookingAction.confirm, id),
+                      onRejectBooking: (id) =>
+                          _handleBookingAction(BookingAction.reject, id),
                       onBookingPress: (booking) {
                         BookingDetailModal.show(
                           context,
                           booking: booking,
                           onEdit: _handleEditBooking,
-                          onCancel: (id) => _handleBookingAction(BookingAction.cancel, id),
-                          onConfirm: (id) => _handleBookingAction(BookingAction.confirm, id),
-                          onReject: (id) => _handleBookingAction(BookingAction.reject, id),
+                          onCancel: (id) =>
+                              _handleBookingAction(BookingAction.cancel, id),
+                          onConfirm: (id) =>
+                              _handleBookingAction(BookingAction.confirm, id),
+                          onReject: (id) =>
+                              _handleBookingAction(BookingAction.reject, id),
                         );
                       },
                     ),
@@ -371,5 +388,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
 }
